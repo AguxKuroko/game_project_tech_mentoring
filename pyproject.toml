@@ -1,0 +1,26 @@
+[project]
+name = "game-project-tech-mentoring"
+version = "0.1.0"
+description = "will see what this will be lol"
+authors = [
+    { name = "Agnieszka", email = "145929660+AguxKuroko@users.noreply.github.com" }
+]
+readme = "README.md"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "fastapi (>=0.133.1,<0.134.0)",
+    "requests (>=2.32.5,<3.0.0)",
+    "pydantic (>=2.12.5,<3.0.0)",
+    "uvicorn[standard] (>=0.30.0,<0.31.0)"
+]
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2"
+pre-commit = "^3.7"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
