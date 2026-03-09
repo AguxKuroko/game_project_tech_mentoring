@@ -1,0 +1,8 @@
+### Home
+GET http://127.0.0.1:8000/
+
+### Valid year
+GET http://127.0.0.1:8000/worst_game/2022
+
+### Invalid year
+GET http://127.0.0.1:8000/worst_game/1999
