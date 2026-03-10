@@ -18,9 +18,16 @@ dependencies = [
 [tool.poetry]
 package-mode = false
 
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "N", "UP", "I"]
+
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2"
 pre-commit = "^3.7"
+ruff = "^0.15.5"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
