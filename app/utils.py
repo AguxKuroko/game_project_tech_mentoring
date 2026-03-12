@@ -1,5 +1,7 @@
 # Helper function for LIVE game api call
-def release_year_extraction(releasyear_from_api: dict) -> str:
-    if releasyear_from_api["released"] is None:
+def extraction_release_year(release_year_from_api: dict) -> str:
+    """Function extract YEAR from full datetime str"""
+    year = release_year_from_api.get("released")
+    if not year:
         return "Data not provided"
-    return releasyear_from_api["released"].split("-")[0]
+    return year.split("-")[0]

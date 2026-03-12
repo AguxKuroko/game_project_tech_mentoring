@@ -23,7 +23,7 @@ def worst_game_per_year(year: int):
     worst_game: RawgApiData | None = rawg_api_call(year)
 
     if worst_game is not None:
-        return {worst_game.game_name: worst_game.game_meta_score}
+        return worst_game  # fastapi will convert it to json
 
     # if year is <= current and no metacrtic -> error msg"
-    return {"message": "No game with a valid Metacritic score was found for this year."}
+    return {"message": f"No game with a valid Metacritic score was found for year {year}."}
