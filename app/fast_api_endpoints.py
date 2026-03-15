@@ -2,8 +2,8 @@ from datetime import datetime
 
 from fastapi import FastAPI, HTTPException, status
 
-from app.api import rawg_api_call
 from app.models import RawgApiData
+from app.rawg_api import rawg_api_call
 
 app = FastAPI()
 
