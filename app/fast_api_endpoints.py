@@ -7,7 +7,11 @@ from fastapi.responses import FileResponse
 from app.models import RawgApiData
 from app.rawg_api import rawg_api_call
 
-app = FastAPI()
+app = FastAPI(
+    title="Worst Game Meme Generator 🎮",
+    description="""Enter a year and receive a spicy, slightly unhinged meme about games that made
+    players question their life choices. Results may vary… but vibes are guaranteed.""",
+)
 
 
 @app.get("/", include_in_schema=False)
@@ -16,12 +20,13 @@ def home():
     return FileResponse(image_path)
 
 
-@app.get("/worst_game/{year}")
+@app.get(
+    "/worst_game/{year}",
+    description="Get a chaotic meme or JSON about the most questionable game of the given year.",
+)
 def worst_game_per_year(year: int, request: Request):
     if year > datetime.now().year:  # if the year is in the future we do not fetch data"
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=f"{year} is in the future."
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{year} is in the future.")
 
     worst_game: RawgApiData | None = rawg_api_call(year)
 

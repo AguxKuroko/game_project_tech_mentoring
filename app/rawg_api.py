@@ -3,7 +3,7 @@ from fastapi import HTTPException, status
 
 from app.api_keys_config import api_game_key
 from app.models import RawgApiData
-from app.utils import extract_genres, extraction_release_year
+from app.utils import extract_genres, extract_release_year
 
 GAME_API_URL = "https://api.rawg.io/api/games"
 
@@ -33,15 +33,13 @@ def rawg_api_call(year: int) -> RawgApiData | None:
 
     game_raw = results[0]
 
-    if not isinstance(
-        game_raw.get("metacritic"), int
-    ):  # defense againt None from gameapi if happens
+    if not isinstance(game_raw.get("metacritic"), int):  # defense againt None from gameapi if happens
         return None
 
     return RawgApiData(
         game_name=game_raw["name"],
         game_id=game_raw["id"],
-        game_release_year=extraction_release_year(game_raw),
+        game_release_year=extract_release_year(game_raw),
         game_meta_score=game_raw["metacritic"],
         game_genre=extract_genres(game_raw["genres"]),
         game_dropped_count=game_raw.get("added_by_status", {}).get("dropped", 0),
