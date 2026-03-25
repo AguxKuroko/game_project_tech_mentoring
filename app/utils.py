@@ -10,3 +10,8 @@ def extraction_release_year(release_year_from_api: dict) -> str:
 def extract_genres(genres: list[dict]) -> list[str]:
     """Extract all genre names for the worst game of a given year."""
     return [genre["name"] for genre in genres]  # if no values in a list we will get an empty list
+
+
+def extract_screenshots(screenshots_raw: list[dict]) -> list[str]:
+    """Extract and normalize valid screenshot URLs for the meme generator."""
+    return [image for screenshot in screenshots_raw if (image := screenshot.get("image"))]

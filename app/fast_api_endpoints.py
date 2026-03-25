@@ -26,9 +26,8 @@ def worst_game_per_year(year: int, request: Request):
     worst_game: RawgApiData | None = rawg_api_call(year)
 
     if worst_game is not None:
-        if request.headers.get("x-secret") == "chaos":  # easter egg for more crazy memes
-            ...
-            # prompt += "Make it extremely cursed and broken."
+        # if request.headers.get("x-secret") == "chaos":  # easter egg for more crazy memes
+
         return worst_game  # fastapi will convert it to json
 
     # if year is <= current and no metacrtic -> error msg"
