@@ -3,6 +3,8 @@ from io import BytesIO
 import requests
 from fastapi import HTTPException, status
 
+from app.models import RawgApiData
+
 
 def extract_release_year(release_year_from_api: dict) -> str:
     """Function extract YEAR from full datetime str"""
@@ -41,3 +43,85 @@ def prepare_images_for_openai(screenshots: list[str]) -> list[BytesIO]:
         image_files.append(img)
 
     return image_files
+
+
+def build_prompt(game_data: RawgApiData, mode: str) -> str:
+    base_prompt = f"""
+Create a funny and visually engaging internet meme with a stylized,
+cartoon-like video game aesthetic.
+
+Context:
+You are given images from a video game. Use them only as visual inspiration (colors, characters,
+environment), but transform them into a new, original and exaggerated scene.
+
+Game data:
+- Title: "{game_data.game_name}"
+- Genre: {", ".join(game_data.game_genre)}
+- Release year: {game_data.game_release_year}
+- Review score: {game_data.game_meta_score}
+- Number of players who stopped playing: {game_data.game_dropped_count}
+
+Visual style:
+- Use vibrant but slightly distorted or “buggy” colors, like a poorly designed or broken game
+- Add noticeable gaming effects such as glitch artifacts, pixelation, scanlines, UI overlays,
+or fake HUD elements (health bars, menus, warning text)
+- Slightly exaggerate proportions or expressions to enhance humor
+- Make the image visually striking and dynamic, but not cluttered
+- Strongly reflect the game genre in the entire scene:
+- Sports → stadium, players, scoreboard, dynamic action
+- Fantasy → magic, dark atmosphere, mythical elements
+- Shooter → weapons, chaos, explosions, tactical UI
+- RPG → characters, dialogue UI, quest-like elements
+
+Text (VERY IMPORTANT):
+- All text must be fully visible, centered, and NEVER cut off
+- Keep large safe margins from all edges (at least 15–20%)
+- Prefer placing text in the upper and middle areas (avoid bottom edge)
+- Use short text (max 6–10 words per line)
+- Break text into multiple lines if needed
+- Use bold, large, high-contrast meme-style font
+- Add strong outline or shadow for readability
+
+Text content:
+- Clearly highlight the game title "{game_data.game_name}" (larger font, strong emphasis)
+- Include the release year "{game_data.game_release_year}" in a clean, readable way
+- Add a short, punchy meme caption (simple setup → punchline)
+- Keep the caption simple, bold, and instantly understandable in under 2 seconds
+
+Metascore display (VERY IMPORTANT):
+- Display the metascore clearly as text: "METASCORE: {game_data.game_meta_score}"
+- Place it inside a bold, visible frame or badge
+- The badge should be red or dark red
+- Add a dripping or melting effect (like paint dripping) for dramatic and humorous effect
+- Make this element stand out visually, like a warning or failure indicator in a game UI
+
+Humor logic:
+- Convert the data into a relatable or absurd gaming situation
+- Focus on player experience, expectations vs reality, or surprising outcomes
+- Use exaggeration and irony
+
+How to use the data:
+- Use the metascore to imply player experience (confusion, struggle, chaos)
+- Use the dropped player count to suggest behavior (leaving early, unexpected reactions)
+- Use genre and visuals to shape the joke
+- Use release year to create contrast (modern vs outdated feeling)
+
+Important rules:
+- Do NOT clutter the image with too much text
+- Do NOT place text near edges where it could be cut off
+- Do NOT distort or obscure readability
+- Do NOT simply repeat raw data as the joke
+- If text does not fit clearly, reduce text instead of shrinking it
+
+Tone:
+- Ironic, playful, chaotic, slightly cursed
+- Feels like a parody of a strange or broken video game
+
+Goal:
+Create ONE cohesive meme image that is visually strong, readable, and instantly understandable.
+"""
+
+    if mode == "dog":
+        base_prompt += "\nMake every character into a diffrent type of dog."
+
+    return base_prompt

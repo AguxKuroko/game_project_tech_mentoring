@@ -1,11 +1,11 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Query, Request, status
 from fastapi.responses import FileResponse
 
-from app.models import RawgApiData
+from app.meme_generator import generate_game_meme
+from app.models import RawgApiData, ResponseFormat
 from app.rawg_api import rawg_api_call
 
 app = FastAPI(
@@ -25,17 +25,22 @@ def home():
     "/worst_game/{year}",
     description="Get a chaotic meme or JSON about the most questionable game of the given year.",
 )
-def worst_game_per_year(year: int, request: Request, format: Literal["json", "image"] = Query("json")):
+def worst_game_per_year(
+    request: Request,
+    year: int = Path(..., description="Year of the game. Must not be in the future."),
+    format: ResponseFormat = Query(default=ResponseFormat.json, description="Response format: json or image"),
+):
     if year > datetime.now().year:  # if the year is in the future we do not fetch data"
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{year} is in the future.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{year} is in the future. No bad games have been made yet...or have they?")
+
+    mode = request.headers.get("x-mode", "normal")
 
     worst_game: RawgApiData | None = rawg_api_call(year)
 
     if worst_game is not None:
-        # if request.headers.get("x-secret") == "chaos":  # easter egg for more crazy memes
-
-        if format == "image":
-            return {"message": "here will be meme"}
+        if format == ResponseFormat.image:
+            meme = generate_game_meme(worst_game, mode)
+            return FileResponse(meme)
 
         return worst_game  # fastapi will convert it to json
 

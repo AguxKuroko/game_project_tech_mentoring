@@ -1,3 +1,5 @@
+from enum import StrEnum
+
 from pydantic import BaseModel
 
 
@@ -9,3 +11,8 @@ class RawgApiData(BaseModel):
     game_genre: list
     game_dropped_count: int
     game_screenhosts: list
+
+
+class ResponseFormat(StrEnum):
+    image = "image"
+    json = "json"
