@@ -1,3 +1,4 @@
+import re
 from io import BytesIO
 
 import requests
@@ -7,7 +8,7 @@ from app.models import RawgApiData
 
 
 def extract_release_year(release_year_from_api: dict) -> str:
-    """Function extract YEAR from full datetime str"""
+    """Extract YEAR from full datetime str"""
     year = release_year_from_api.get("released")
     if not year:
         return "Data not provided"
@@ -46,6 +47,12 @@ def prepare_images_for_openai(screenshots: list[str]) -> list[BytesIO]:
 
 
 def build_prompt(game_data: RawgApiData, mode: str) -> str:
+    """Create a dynamic prompt for the OpenAI model based on game data.
+
+    The game_data object is a model that stores information retrieved from the game API.
+    This data is injected into the prompt, so each prompt is built dynamically
+    (e.g., game name, genre, release year, etc.).
+    """
     base_prompt = f"""
 Create a funny and visually engaging internet meme with a stylized,
 cartoon-like video game aesthetic.
@@ -122,6 +129,11 @@ Create ONE cohesive meme image that is visually strong, readable, and instantly 
 """
 
     if mode == "dog":
-        base_prompt += "\nMake every character into a diffrent type of dog."
+        base_prompt += "\nSecret 'DOG' mode: \nTransform each character into a unique dog breed."
 
     return base_prompt
+
+
+def clean_filename(game_data_name: str) -> str:
+    """Sanitize a game name string to create a safe filename"""
+    return re.sub(r"[^\w\s-]", "", game_data_name).strip().replace(" ", "_")

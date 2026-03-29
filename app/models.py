@@ -1,6 +1,4 @@
-from enum import StrEnum
-
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl
 
 
 class RawgApiData(BaseModel):
@@ -13,6 +11,6 @@ class RawgApiData(BaseModel):
     game_screenhosts: list
 
 
-class ResponseFormat(StrEnum):
-    image = "image"
-    json = "json"
+class MemeGeneratorJsonData(BaseModel):
+    game_name: str
+    game_meme: HttpUrl
