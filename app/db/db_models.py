@@ -1,7 +1,8 @@
 from datetime import datetime
 
-from db_utils import get_time
 from sqlmodel import Field, SQLModel
+
+from app.db.db_utils import get_time
 
 
 class Meme(SQLModel, table=True):

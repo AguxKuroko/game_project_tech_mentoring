@@ -7,12 +7,13 @@ from app.app_config import ConfigResponseFormat, app_paths
 from app.meme_generator import generate_game_meme
 from app.models import MemeGeneratorJsonData, RawgApiData
 from app.rawg_api import rawg_api_call
-from app.utils import clean_filename
+from app.utils import clean_filename, lifespam
 
 app = FastAPI(
     title="🎮 Worst Game Meme Generator 🎮",
     description="""Enter a year and receive a spicy, slightly unhinged meme about games that made
     players question their life choices. Results may vary… but vibes are guaranteed.""",
+    lifespan=lifespam,
 )
 
 

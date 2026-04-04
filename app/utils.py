@@ -1,9 +1,13 @@
 import re
+from contextlib import asynccontextmanager
 from io import BytesIO
 
 import requests
-from fastapi import HTTPException, status
+from fastapi import FastAPI, HTTPException, status
+from sqlmodel import SQLModel
 
+from app.db.db_models import Meme, MemeStats  # noqa: F401
+from app.db.engine import engine
 from app.models import RawgApiData
 
 
@@ -137,3 +141,11 @@ Create ONE cohesive meme image that is visually strong, readable, and instantly 
 def clean_filename(game_data_name: str) -> str:
     """Sanitize a game name string to create a safe filename"""
     return re.sub(r"[^\w\s-]", "", game_data_name).strip().replace(" ", "_")
+
+
+@asynccontextmanager
+async def lifespam(app: FastAPI):
+    print('🎮 Booting up the "Worst Game Meme Generator"... Brace yourself for terrible games! 🎮')
+    SQLModel.metadata.create_all(engine)
+    yield
+    print("💀 The meme machine rests... until next time. 💀'")
