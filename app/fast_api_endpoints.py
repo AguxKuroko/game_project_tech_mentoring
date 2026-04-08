@@ -23,7 +23,7 @@ app = FastAPI(
 
 @app.get("/", include_in_schema=False)
 def home():
-    return FileResponse(app_paths.home_dir)
+    return FileResponse(app_paths.home_image)
 
 
 @app.get(

@@ -1,4 +1,4 @@
-from enum import StrEnum
+from enum import StrEnum, auto
 from pathlib import Path
 
 
@@ -7,7 +7,7 @@ class ConfigPath:
         self._app_base_dir = Path(__file__).resolve().parent
 
     @property
-    def home_dir(self) -> Path:
+    def home_image(self) -> Path:
         return self._app_base_dir / "home_endpoint_image" / "welcome.png"
 
     @property
@@ -23,5 +23,5 @@ app_paths = ConfigPath()
 
 
 class ConfigResponseFormat(StrEnum):
-    image = "image"
-    json = "json"
+    image = auto()
+    json = auto()
