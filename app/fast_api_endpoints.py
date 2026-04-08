@@ -43,7 +43,7 @@ def worst_game_per_year(
     worst_game: RawgApiData | None = rawg_api_call(year)
 
     if worst_game is None:
-        return {"message": f"No game with a valid Metacritic score was found for year {year}."}
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"No game with a valid Metacritic score was found for year {year}.")
 
     safe_name = clean_filename(worst_game.game_name)
     filepath = app_paths.memes_dir / f"{safe_name}_{worst_game.game_release_year}.png"
