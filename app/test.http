@@ -6,3 +6,10 @@ GET http://127.0.0.1:8000/worst_game/2022
 
 ### Invalid year
 GET http://127.0.0.1:8000/worst_game/1999
+
+### DOG mode check
+GET http://localhost:8000/worst_game/1999?format=image
+x-mode: dog
+
+### NORMAL mode check
+GET http://localhost:8000/worst_game/1999?format=image

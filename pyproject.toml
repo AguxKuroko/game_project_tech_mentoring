@@ -20,10 +20,12 @@ dependencies = [
 package-mode = false
 
 [tool.ruff]
-line-length = 110
+line-length = 160
+
 
 [tool.ruff.lint]
 select = ["E", "F", "B", "N", "UP", "I"]
+ignore = ["B008"]
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2"
