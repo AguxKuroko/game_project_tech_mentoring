@@ -92,7 +92,7 @@ def hall_of_shame_stats(request: Request) -> list[MemeTopResponse]:
         max_count = session.exec(select(MemeStats.access_count).order_by(MemeStats.access_count.desc())).first()
 
         if max_count is None:
-            return {"message": "No memes yet. Peace has been restored... for now."}
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No memes yet. Peace has been restored... for now")
 
         results = session.exec(select(Meme, MemeStats).join(MemeStats, MemeStats.meme_id == Meme.id).where(MemeStats.access_count == max_count)).all()
 
