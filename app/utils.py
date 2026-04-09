@@ -10,6 +10,8 @@ from app.db.db_models import Meme, MemeStats  # noqa: F401
 from app.db.engine import engine
 from app.models import RawgApiData
 
+from app.models import RawgApiData
+
 
 def extract_release_year(release_year_from_api: dict) -> str:
     """Extract YEAR from full datetime str"""
