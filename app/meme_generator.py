@@ -1,4 +1,5 @@
 import base64
+from pathlib import Path
 
 from openai import OpenAI
 
@@ -8,7 +9,7 @@ from app.models import RawgApiData
 from app.utils import build_prompt, clean_filename, extract_screenshots, prepare_images_for_openai
 
 
-def generate_game_meme(game_data: RawgApiData, meme_mode: str, save: bool = True):
+def generate_game_meme(game_data: RawgApiData, meme_mode: str, save: bool = True) -> Path | bytes:
     client = OpenAI(api_key=api_game_key.OPEN_AI_API_KEY)
 
     result = client.images.edit(

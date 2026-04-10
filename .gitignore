@@ -208,4 +208,7 @@ __marimo__/
 
 
 #meme
-app/memes/
+app/db/memes/
+
+#db
+*.db
