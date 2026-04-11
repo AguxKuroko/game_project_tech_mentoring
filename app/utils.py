@@ -144,7 +144,7 @@ def clean_filename(game_data_name: str) -> str:
 
 
 @asynccontextmanager
-async def lifespam(app: FastAPI):
+async def lifespan(app: FastAPI):
     print('🎮 Booting up the "Worst Game Meme Generator"... Brace yourself for terrible games! 🎮')
     SQLModel.metadata.create_all(engine)
     yield
