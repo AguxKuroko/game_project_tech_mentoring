@@ -29,6 +29,12 @@ Under the fun surface, this app demonstrates a real-world data pipeline: it **in
 All with ironic, slightly unhinged energy. 🔥
 
 ---
+## 🚀 Demo
+Example API usage via Swagger UI:
+
+https://github.com/user-attachments/assets/67ea92a1-87ff-42b4-8031-c60b0507d3a4
+
+---
 
 ## 🔬 Backend + Data Engineering Flavor
 
@@ -102,6 +108,8 @@ The prompt is **built dynamically** from real game data (title, genre, metascore
 |-----------|------|-------------|
 | `year` *(path)* | `int` | The year to look up |
 | `format` *(query)* | `json` \| `image` | Response format (default: `json`) |
+
+
 
 <details>
 <summary>📦 Example JSON Response</summary>
