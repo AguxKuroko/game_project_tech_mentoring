@@ -4,8 +4,11 @@ from io import BytesIO
 
 import requests
 from fastapi import FastAPI, HTTPException, status
+from openai import OpenAI
+from openai.types.images_response import ImagesResponse
 from sqlmodel import SQLModel
 
+from app.app_config import ConfigAppMode
 from app.db.db_models import Meme, MemeStats  # noqa: F401
 from app.db.engine import engine
 from app.models import RawgApiData
@@ -144,8 +147,17 @@ def clean_filename(game_data_name: str) -> str:
 
 
 @asynccontextmanager
-async def lifespam(app: FastAPI):
+async def lifespan(app: FastAPI):
     print('🎮 Booting up the "Worst Game Meme Generator"... Brace yourself for terrible games! 🎮')
     SQLModel.metadata.create_all(engine)
     yield
     print("💀 The meme machine rests... until next time. 💀'")
+
+
+def generate_meme_without_images(game_data: RawgApiData, meme_mode: ConfigAppMode, client: OpenAI) -> ImagesResponse:
+    """Fallback: generates a meme using only a prompt when no screenshots are provided."""
+    return client.images.generate(
+        model="gpt-image-1",
+        prompt=build_prompt(game_data, meme_mode),
+        size="1024x1024",
+    )

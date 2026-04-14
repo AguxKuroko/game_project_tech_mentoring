@@ -27,6 +27,13 @@ Under the fun surface, this app demonstrates a real-world data pipeline: it **in
 5. **Tracks access analytics** (view count, timestamps) powering a *Hall of Shame* leaderboard
 
 All with ironic, slightly unhinged energy. 🔥
+
+---
+## 🚀 Demo
+Example API usage via Swagger UI:
+
+https://github.com/user-attachments/assets/67ea92a1-87ff-42b4-8031-c60b0507d3a4
+
 ---
 
 ## 🔬 Backend + Data Engineering Flavor
@@ -81,11 +88,9 @@ flowchart TD
 
 > **How caching works:** The RAWG API is called on every request (it's free and fast — we need the game data to build the file path). The **expensive OpenAI call** is the one that gets skipped when a meme already exists in the DB. On a cache hit, the saved `.png` is served directly — no image generation, no waiting. Caching the RAWG response was intentionally skipped — the call is free, lightweight, and always returns fresh data if game metadata changes over time.
 
-### 🤖 A Note on Meme Generation & OpenAI
+### 🤖 A Note on Meme Generation
 
 The prompt is **built dynamically** from real game data (title, genre, metascore, drop count, release year) and is carefully crafted to produce funny, readable meme images. It's not a simple one-liner — it includes detailed instructions for visual style, text placement, humor logic, and metascore badges.
-
-**However:** OpenAI's image generation API has strict content moderation. Since the prompt involves meme-style humor, roasting, and real game screenshots, the API may occasionally **decline a request** due to its safety filters. This is **not a prompt issue** — it's a known behavior of the moderation layer. In practice, retrying 1–2 times almost always succeeds. The prompt itself has been tested and iterated to stay within acceptable boundaries while still delivering the chaos.
 
 ---
 
@@ -103,6 +108,8 @@ The prompt is **built dynamically** from real game data (title, genre, metascore
 |-----------|------|-------------|
 | `year` *(path)* | `int` | The year to look up |
 | `format` *(query)* | `json` \| `image` | Response format (default: `json`) |
+
+
 
 <details>
 <summary>📦 Example JSON Response</summary>

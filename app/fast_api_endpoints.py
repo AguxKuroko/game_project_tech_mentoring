@@ -2,22 +2,23 @@ from datetime import datetime
 
 from fastapi import FastAPI, HTTPException, Path, Query, Request, Response, status
 from fastapi.responses import FileResponse
+from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import Session, select
 
-from app.app_config import ConfigResponseFormat, app_paths
+from app.app_config import ConfigAppMode, ConfigResponseFormat, app_paths
 from app.db.db_models import Meme, MemeStats, MemeTopResponse
 from app.db.db_utils import get_time
 from app.db.engine import engine
 from app.meme_generator import generate_game_meme
 from app.models import MemeGeneratorJsonData, RawgApiData
 from app.rawg_api import rawg_api_call
-from app.utils import clean_filename, lifespam
+from app.utils import clean_filename, lifespan
 
 app = FastAPI(
     title="🎮 Worst Game Meme Generator 🎮",
     description="""Enter a year and receive a spicy, slightly unhinged meme about games that made
     players question their life choices. Results may vary… but vibes are guaranteed.""",
-    lifespan=lifespam,
+    lifespan=lifespan,
 )
 
 
@@ -38,7 +39,12 @@ def worst_game_per_year(
     if year > datetime.now().year:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{year} is in the future. No bad games have been made yet...or have they?")
 
-    mode = request.headers.get("x-mode", "normal")
+    mode_raw: str = request.headers.get("x-mode", ConfigAppMode.normal)
+
+    try:
+        mode = ConfigAppMode(mode_raw)
+    except ValueError:
+        mode = ConfigAppMode.normal
 
     worst_game: RawgApiData | None = rawg_api_call(year)
 
@@ -48,37 +54,41 @@ def worst_game_per_year(
     safe_name = clean_filename(worst_game.game_name)
     filepath = app_paths.memes_dir / f"{safe_name}_{worst_game.game_release_year}.png"
 
-    if mode == "dog":
+    if mode == ConfigAppMode.dog:
         image_bytes: bytes = generate_game_meme(worst_game, mode, save=False)
         return Response(content=image_bytes, media_type="image/png")
 
     with Session(engine) as session:
-        db_meme: Meme | None = session.exec(select(Meme).where(Meme.file_path == str(filepath))).one_or_none()
+        try:
+            db_meme: Meme | None = session.exec(select(Meme).where(Meme.file_path == str(filepath))).one_or_none()
 
-        # if not in database, generate meme and create record
-        if db_meme is None:
-            generate_game_meme(worst_game, mode)
-            db_meme = Meme(
-                game_name=worst_game.game_name,
-                metascore=worst_game.game_meta_score,
-                file_path=str(filepath),
-                year=worst_game.game_release_year,
+            if db_meme is None:
+                generate_game_meme(worst_game, mode)
+                db_meme = Meme(
+                    game_name=worst_game.game_name,
+                    metascore=worst_game.game_meta_score,
+                    file_path=str(filepath),
+                    year=worst_game.game_release_year,
+                )
+                session.add(db_meme)
+                session.flush()  # get id without committing
+
+            existing_stats: MemeStats | None = session.exec(select(MemeStats).where(MemeStats.meme_id == db_meme.id)).one_or_none()
+
+            if existing_stats is not None:
+                existing_stats.access_count += 1
+                existing_stats.last_accessed = get_time()
+            else:
+                db_stats = MemeStats(meme_id=db_meme.id, access_count=1, last_accessed=get_time())
+                session.add(db_stats)
+
+            session.commit()  # one commit — both meme + stats, or nothing
+
+        except SQLAlchemyError:
+            session.rollback()  # undo everything if anything fails
+            raise HTTPException(  # noqa: B904
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Database operation failed."
             )
-            session.add(db_meme)
-            session.commit()
-            session.refresh(db_meme)
-
-        # update stats
-        existing_stats: MemeStats | None = session.exec(select(MemeStats).where(MemeStats.meme_id == db_meme.id)).one_or_none()
-
-        if existing_stats is not None:
-            existing_stats.access_count += 1
-            existing_stats.last_accessed = get_time()
-        else:
-            db_stats = MemeStats(meme_id=db_meme.id, access_count=1, last_accessed=get_time())
-            session.add(db_stats)
-
-        session.commit()
 
         if format == ConfigResponseFormat.image:
             return FileResponse(filepath)

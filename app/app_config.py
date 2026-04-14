@@ -25,3 +25,8 @@ app_paths = ConfigPath()
 class ConfigResponseFormat(StrEnum):
     image = auto()
     json = auto()
+
+
+class ConfigAppMode(StrEnum):
+    dog = auto()
+    normal = auto()
