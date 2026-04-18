@@ -10,16 +10,23 @@ from sqlmodel import SQLModel
 
 from app.app_config import ConfigAppMode
 from app.db.db_models import Meme, MemeStats  # noqa: F401
-from app.db.engine import engine
+from app.db.engine import get_engine
 from app.models import RawgApiData
 
 
 def extract_release_year(release_year_from_api: dict) -> str:
-    """Extract YEAR from full datetime str"""
+    """Extract YEAR from full datetime str or int"""
     year = release_year_from_api.get("released")
-    if not year:
+
+    if not year:  # covers None, empty string, and invalid 0 values
         return "Data not provided"
-    return year.split("-")[0]
+
+    if isinstance(year, int):
+        return str(year)
+    elif isinstance(year, str):
+        return year.split("-")[0]
+
+    return "Data not provided"
 
 
 def extract_genres(genres: list[dict]) -> list[str]:
@@ -149,7 +156,7 @@ def clean_filename(game_data_name: str) -> str:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print('🎮 Booting up the "Worst Game Meme Generator"... Brace yourself for terrible games! 🎮')
-    SQLModel.metadata.create_all(engine)
+    SQLModel.metadata.create_all(get_engine())
     yield
     print("💀 The meme machine rests... until next time. 💀'")
 
