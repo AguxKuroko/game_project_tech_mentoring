@@ -1,15 +1,6 @@
 import pytest
 
-from app.utils import extract_release_year
-
-
-class Test:
-    def test_dict_with_str_date(self):
-        data = {"released": "2021-12-01"}
-        actual = extract_release_year(data)
-        expected = "2021"
-
-        assert actual == expected
+from app.utils import extract_genres, extract_release_year
 
 
 class TestExtractReleaseYear:
@@ -26,3 +17,26 @@ class TestExtractReleaseYear:
     )
     def test_extract_release_year(self, input_data, expected):
         assert extract_release_year(input_data) == expected
+
+
+class TestExtractGenres:
+    def test_dict_with_genres(self):
+        data = [{"name": "action"}, {"name": "fantasy"}]
+        actual = extract_genres(data)
+        expected = ["action", "fantasy"]
+
+        assert actual == expected
+
+    def test_dict_without_genres(self):
+        data = [{"released": "2021-12-01"}]
+        actual = extract_genres(data)
+        expected = []
+
+        assert actual == expected
+
+    def test_none_name(self):
+        data = [{"name": None}]
+        actual = extract_genres(data)
+        expected = []
+
+        assert actual == expected

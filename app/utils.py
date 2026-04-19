@@ -31,7 +31,7 @@ def extract_release_year(release_year_from_api: dict) -> str:
 
 def extract_genres(genres: list[dict]) -> list[str]:
     """Extract all genre names for the worst game of a given year."""
-    return [genre["name"] for genre in genres]  # if no values in a list we will get an empty list
+    return [result for genre in genres if (result := genre.get("name"))]
 
 
 def extract_screenshots(screenshots_raw: list[dict]) -> list[str]:
