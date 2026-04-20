@@ -1,6 +1,6 @@
 import pytest
 
-from app.utils import extract_genres, extract_release_year
+from app.utils import extract_genres, extract_release_year, prepare_images_for_openai
 
 
 class TestExtractReleaseYear:
@@ -37,6 +37,15 @@ class TestExtractGenres:
     def test_none_name(self):
         data = [{"name": None}]
         actual = extract_genres(data)
+        expected = []
+
+        assert actual == expected
+
+
+class TestPrepareImagesForOpenAi:
+    def empty_list(self):
+        data = []
+        actual = prepare_images_for_openai(data)
         expected = []
 
         assert actual == expected
