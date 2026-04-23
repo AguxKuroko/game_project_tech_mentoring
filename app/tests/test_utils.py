@@ -6,7 +6,7 @@ import requests
 from fastapi import HTTPException
 
 from app.models import RawgApiData
-from app.utils import build_prompt, clean_filename, extract_genres, extract_release_year, prepare_images_for_openai
+from app.utils import build_prompt, clean_filename, extract_genres, extract_release_year, generate_meme_without_images, prepare_images_for_openai
 
 
 class TestExtractReleaseYear:
@@ -109,11 +109,28 @@ class TestBuildPrompt:
 
 
 class TestCleanFilename:
-    def test_remove_special_chars():
+    def test_remove_special_chars(self):
         assert clean_filename("game@#2021!") == "game2021"
 
-    def test_spaces_to_underscore():
+    def test_spaces_to_underscore(self):
         assert clean_filename("my game name") == "my_game_name"
 
-    def test_strip_spaces():
+    def test_strip_spaces(self):
         assert clean_filename("  test game  ") == "test_game"
+
+
+class TestGenerateMemeWithoutImages:
+    def test_generate_meme_without_images_success(self, rawg_api_fake_game):
+        mock_client = Mock()
+        expected = {"image": "fake"}
+        mock_client.images.generate.return_value = expected
+        result = generate_meme_without_images(rawg_api_fake_game, "normal", mock_client)
+        assert result == expected
+
+    def test_generate_meme_wihtou_images_failure(self, rawg_api_fake_game):
+        mock_client = Mock()
+
+        mock_client.images.generate.side_effect = Exception("boom")
+
+        with pytest.raises(HTTPException):
+            generate_meme_without_images(rawg_api_fake_game, "normal", mock_client)

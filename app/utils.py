@@ -163,8 +163,13 @@ async def lifespan(app: FastAPI):
 
 def generate_meme_without_images(game_data: RawgApiData, meme_mode: ConfigAppMode, client: OpenAI) -> ImagesResponse:
     """Fallback: generates a meme using only a prompt when no screenshots are provided."""
-    return client.images.generate(
-        model="gpt-image-1",
-        prompt=build_prompt(game_data, meme_mode),
-        size="1024x1024",
-    )
+    try:
+        return client.images.generate(
+            model="gpt-image-1",
+            prompt=build_prompt(game_data, meme_mode),
+            size="1024x1024",
+        )
+    except Exception:
+        raise HTTPException(  # noqa: B904
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate meme"
+        )
