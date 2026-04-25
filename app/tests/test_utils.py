@@ -5,7 +5,6 @@ import pytest
 import requests
 from fastapi import HTTPException
 
-from app.models import RawgApiData
 from app.utils import build_prompt, clean_filename, extract_genres, extract_release_year, generate_meme_without_images, prepare_images_for_openai
 
 
@@ -81,24 +80,11 @@ class TestPrepareImagesForOpenAiMock:
             prepare_images_for_openai(["http://bad-url"])
 
 
-@pytest.fixture
-def rawg_api_fake_game():
-    return RawgApiData(
-        game_name="Unit test 2025",
-        game_id=1,
-        game_release_year="2021",
-        game_meta_score=20,
-        game_genre=["action", "fps"],
-        game_dropped_count=777,
-        game_screenhosts=[],
-    )
-
-
 class TestBuildPrompt:
     def test_normal_mode(self, rawg_api_fake_game):
         result = build_prompt(rawg_api_fake_game, "normal")
 
-        assert "Unit test 2025" in result
+        assert "Unit test 2021" in result
         assert "2021" in result
 
     def test_dog_mode(self, rawg_api_fake_game):
