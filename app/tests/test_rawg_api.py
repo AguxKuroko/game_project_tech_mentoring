@@ -1,8 +1,13 @@
 from unittest.mock import Mock, patch
 
+import pytest
+import requests
+from fastapi import HTTPException
+
 from app.rawg_api import rawg_api_call
 
 
+# helper function for creating mock object
 def create_mock_response(json_data):
     mock = Mock()
     mock.raise_for_status.return_value = None
@@ -32,3 +37,21 @@ class TestRawgApiCall:
         actual = rawg_api_call(2021)
         assert actual == rawg_api_fake_game
         assert actual.game_name == rawg_api_fake_game.game_name
+
+    @patch("app.rawg_api.requests.get")
+    def test_request_error(self, get_mock):
+        get_mock.side_effect = requests.exceptions.RequestException()
+
+        with pytest.raises(HTTPException):
+            rawg_api_call(1988)
+
+    @patch("app.rawg_api.requests.get")
+    def test_raise_for_status_error(self, get_mock):
+        mock_response = Mock()
+
+        mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError()
+
+        get_mock.return_value = mock_response
+
+        with pytest.raises(HTTPException):
+            rawg_api_call(2022)

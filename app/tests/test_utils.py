@@ -74,7 +74,7 @@ class TestPrepareImagesForOpenAiMock:
 
     @patch("app.utils.requests.get")
     def test_download_failure(self, mock_get):
-        mock_get.side_effect = requests.exceptions.RequestException
+        mock_get.side_effect = requests.exceptions.RequestException()
 
         with pytest.raises(HTTPException):
             prepare_images_for_openai(["http://bad-url"])
