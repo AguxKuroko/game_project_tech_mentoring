@@ -10,21 +10,28 @@ from sqlmodel import SQLModel
 
 from app.app_config import ConfigAppMode
 from app.db.db_models import Meme, MemeStats  # noqa: F401
-from app.db.engine import engine
+from app.db.engine import get_engine
 from app.models import RawgApiData
 
 
 def extract_release_year(release_year_from_api: dict) -> str:
-    """Extract YEAR from full datetime str"""
+    """Extract YEAR from full datetime str or int"""
     year = release_year_from_api.get("released")
-    if not year:
+
+    if not year:  # covers None, empty string, and invalid 0 values
         return "Data not provided"
-    return year.split("-")[0]
+
+    if isinstance(year, int):
+        return str(year)
+    elif isinstance(year, str):
+        return year.split("-")[0]
+
+    return "Data not provided"
 
 
 def extract_genres(genres: list[dict]) -> list[str]:
     """Extract all genre names for the worst game of a given year."""
-    return [genre["name"] for genre in genres]  # if no values in a list we will get an empty list
+    return [result for genre in genres if (result := genre.get("name"))]
 
 
 def extract_screenshots(screenshots_raw: list[dict]) -> list[str]:
@@ -149,15 +156,20 @@ def clean_filename(game_data_name: str) -> str:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print('🎮 Booting up the "Worst Game Meme Generator"... Brace yourself for terrible games! 🎮')
-    SQLModel.metadata.create_all(engine)
+    SQLModel.metadata.create_all(get_engine())
     yield
     print("💀 The meme machine rests... until next time. 💀'")
 
 
 def generate_meme_without_images(game_data: RawgApiData, meme_mode: ConfigAppMode, client: OpenAI) -> ImagesResponse:
     """Fallback: generates a meme using only a prompt when no screenshots are provided."""
-    return client.images.generate(
-        model="gpt-image-1",
-        prompt=build_prompt(game_data, meme_mode),
-        size="1024x1024",
-    )
+    try:
+        return client.images.generate(
+            model="gpt-image-1",
+            prompt=build_prompt(game_data, meme_mode),
+            size="1024x1024",
+        )
+    except Exception:
+        raise HTTPException(  # noqa: B904
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate meme"
+        )
