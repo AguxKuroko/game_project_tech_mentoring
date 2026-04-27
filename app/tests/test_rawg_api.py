@@ -32,11 +32,11 @@ class TestRawgApiCall:
         assert rawg_api_call(2020) is None
 
     @patch("app.rawg_api.requests.get")
-    def test_rawg_api_success(self, get_mock, rawg_api_fake_game, valid_fake_json):
+    def test_rawg_api_success(self, get_mock, rawg_api_fake_game_without_screenshots, valid_fake_json):
         get_mock.return_value = create_mock_response(valid_fake_json)
         actual = rawg_api_call(2021)
-        assert actual == rawg_api_fake_game
-        assert actual.game_name == rawg_api_fake_game.game_name
+        assert actual == rawg_api_fake_game_without_screenshots
+        assert actual.game_name == rawg_api_fake_game_without_screenshots.game_name
 
     @patch("app.rawg_api.requests.get")
     def test_request_error(self, get_mock):

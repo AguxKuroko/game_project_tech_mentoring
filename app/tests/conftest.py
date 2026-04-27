@@ -4,7 +4,23 @@ from app.models import RawgApiData
 
 
 @pytest.fixture
-def rawg_api_fake_game():
+def rawg_api_fake_game_with_screenshots():
+    return RawgApiData(
+        game_name="Unit test 2021",
+        game_id=1,
+        game_release_year="2021",
+        game_meta_score=20,
+        game_genre=["action", "fps"],
+        game_dropped_count=777,
+        game_screenhosts=[
+            {"image": "http://test.com/image.jpg"},
+            {"image": "http://test.com/image_two.jpg"},
+        ],
+    )
+
+
+@pytest.fixture
+def rawg_api_fake_game_without_screenshots():
     return RawgApiData(
         game_name="Unit test 2021",
         game_id=1,

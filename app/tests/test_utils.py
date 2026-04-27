@@ -81,14 +81,14 @@ class TestPrepareImagesForOpenAiMock:
 
 
 class TestBuildPrompt:
-    def test_normal_mode(self, rawg_api_fake_game):
-        result = build_prompt(rawg_api_fake_game, "normal")
+    def test_normal_mode(self, rawg_api_fake_game_with_screenshots):
+        result = build_prompt(rawg_api_fake_game_with_screenshots, "normal")
 
         assert "Unit test 2021" in result
         assert "2021" in result
 
-    def test_dog_mode(self, rawg_api_fake_game):
-        result = build_prompt(rawg_api_fake_game, "dog")
+    def test_dog_mode(self, rawg_api_fake_game_with_screenshots):
+        result = build_prompt(rawg_api_fake_game_with_screenshots, "dog")
 
         assert "Secret 'DOG' mode" in result
         assert "action" in result
@@ -106,17 +106,17 @@ class TestCleanFilename:
 
 
 class TestGenerateMemeWithoutImages:
-    def test_generate_meme_without_images_success(self, rawg_api_fake_game):
+    def test_generate_meme_without_images_success(self, rawg_api_fake_game_without_screenshots):
         mock_client = Mock()
         expected = {"image": "fake"}
         mock_client.images.generate.return_value = expected
-        result = generate_meme_without_images(rawg_api_fake_game, "normal", mock_client)
+        result = generate_meme_without_images(rawg_api_fake_game_without_screenshots, "normal", mock_client)
         assert result == expected
 
-    def test_generate_meme_wihtou_images_failure(self, rawg_api_fake_game):
+    def test_generate_meme_wihtou_images_failure(self, rawg_api_fake_game_without_screenshots):
         mock_client = Mock()
 
         mock_client.images.generate.side_effect = Exception("boom")
 
         with pytest.raises(HTTPException):
-            generate_meme_without_images(rawg_api_fake_game, "normal", mock_client)
+            generate_meme_without_images(rawg_api_fake_game_without_screenshots, "normal", mock_client)
