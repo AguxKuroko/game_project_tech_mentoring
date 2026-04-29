@@ -7,6 +7,10 @@ class ConfigPath:
         self._app_base_dir = Path(__file__).resolve().parent
 
     @property
+    def logs_dir(self):
+        return self._app_base_dir / "logs"
+
+    @property
     def home_image(self) -> Path:
         return self._app_base_dir / "home_endpoint_image" / "welcome.png"
 
