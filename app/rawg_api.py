@@ -1,3 +1,5 @@
+import logging
+
 import requests
 from fastapi import HTTPException, status
 
@@ -6,6 +8,8 @@ from app.models import RawgApiData
 from app.utils import extract_genres, extract_release_year
 
 GAME_API_URL = "https://api.rawg.io/api/games"
+
+logger = logging.getLogger(__name__)
 
 
 def rawg_api_call(year: int) -> RawgApiData | None:
@@ -16,7 +20,7 @@ def rawg_api_call(year: int) -> RawgApiData | None:
         "page_size": 1,
         "metacritic": "1,100",  # ensure metascore exists
     }
-
+    logger.info(f"Fetching RAWG data | year={year}")
     try:
         response = requests.get(GAME_API_URL, params=params)
         response.raise_for_status()  # catch HTTP errors
@@ -36,6 +40,7 @@ def rawg_api_call(year: int) -> RawgApiData | None:
     if not isinstance(game_raw.get("metacritic"), int):  # defense againt None from gameapi if happens
         return None
 
+    logger.info("Fetching complited. Success data fetched")
     return RawgApiData(
         game_name=game_raw["name"],
         game_id=game_raw["id"],

@@ -1,7 +1,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
 
-from app_config import app_paths
+from app.app_config import app_paths
 
 
 def setup_logging():
@@ -23,9 +23,3 @@ def setup_logging():
 
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
-
-
-setup_logging()
-logger = logging.getLogger(__name__)
-
-logger.info("Something happened")

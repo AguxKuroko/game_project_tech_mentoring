@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 from fastapi import FastAPI, HTTPException, Path, Query, Request, Response, status
@@ -9,10 +10,14 @@ from app.app_config import ConfigAppMode, ConfigResponseFormat, app_paths
 from app.db.db_models import Meme, MemeStats, MemeTopResponse
 from app.db.db_utils import get_time
 from app.db.engine import engine
+from app.logging_config import setup_logging
 from app.meme_generator import generate_game_meme
 from app.models import MemeGeneratorJsonData, RawgApiData
 from app.rawg_api import rawg_api_call
 from app.utils import clean_filename, lifespan
+
+setup_logging()
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="🎮 Worst Game Meme Generator 🎮",
@@ -20,6 +25,8 @@ app = FastAPI(
     players question their life choices. Results may vary… but vibes are guaranteed.""",
     lifespan=lifespan,
 )
+
+logger.info("starting app")
 
 
 @app.get("/", include_in_schema=False)
@@ -36,7 +43,9 @@ def worst_game_per_year(
     year: int = Path(..., description="Year for which to retrieve the worst game based on Metascore."),
     format: ConfigResponseFormat = Query(default=ConfigResponseFormat.json, description="Response format: json or image"),
 ):
+    logger.info(f"Request received for year {year}")
     if year > datetime.now().year:
+        logger.warning(f"User requested future year: {year}")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{year} is in the future. No bad games have been made yet...or have they?")
 
     mode_raw: str = request.headers.get("x-mode", ConfigAppMode.normal)
@@ -46,9 +55,11 @@ def worst_game_per_year(
     except ValueError:
         mode = ConfigAppMode.normal
 
+    logger.info("API call to RAWG API.....")
     worst_game: RawgApiData | None = rawg_api_call(year)
 
     if worst_game is None:
+        logger.warning(f"No game with a valid Metacritic score was found for year {year}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No game with a valid Metacritic score was found for year {year}.")
 
     safe_name = clean_filename(worst_game.game_name)
