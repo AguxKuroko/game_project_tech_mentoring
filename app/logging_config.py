@@ -23,3 +23,5 @@ def setup_logging():
 
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
+
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
