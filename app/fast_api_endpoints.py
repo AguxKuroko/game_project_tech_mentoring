@@ -26,7 +26,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-logger.info("starting app")
+logger.info("Starting app")
 
 
 @app.get("/", include_in_schema=False)
@@ -43,9 +43,9 @@ def worst_game_per_year(
     year: int = Path(..., description="Year for which to retrieve the worst game based on Metascore."),
     format: ConfigResponseFormat = Query(default=ConfigResponseFormat.json, description="Response format: json or image"),
 ):
-    logger.info(f"Request received for year {year}")
+    logger.info(f"Request received | year={year}")
     if year > datetime.now().year:
-        logger.warning(f"User requested future year: {year}")
+        logger.warning(f"Invalid request | future year={year}")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{year} is in the future. No bad games have been made yet...or have they?")
 
     mode_raw: str = request.headers.get("x-mode", ConfigAppMode.normal)
@@ -55,25 +55,28 @@ def worst_game_per_year(
     except ValueError:
         mode = ConfigAppMode.normal
 
-    logger.info("API call to RAWG API.....")
+    logger.info(f"Fetching RAWG data | year={year}")
     worst_game: RawgApiData | None = rawg_api_call(year)
 
     if worst_game is None:
-        logger.warning(f"No game with a valid Metacritic score was found for year {year}")
+        logger.warning(f"No valid game found | year={year}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No game with a valid Metacritic score was found for year {year}.")
 
     safe_name = clean_filename(worst_game.game_name)
     filepath = app_paths.memes_dir / f"{safe_name}_{worst_game.game_release_year}.png"
 
     if mode == ConfigAppMode.dog:
+        logger.info("Mode activated | dog")
         image_bytes: bytes = generate_game_meme(worst_game, mode, save=False)
         return Response(content=image_bytes, media_type="image/png")
 
     with Session(engine) as session:
         try:
+            logger.info(f"Checking cache | year={year}")
             db_meme: Meme | None = session.exec(select(Meme).where(Meme.file_path == str(filepath))).one_or_none()
 
             if db_meme is None:
+                logger.info(f"Cache miss | generating meme | year={year}")
                 generate_game_meme(worst_game, mode)
                 db_meme = Meme(
                     game_name=worst_game.game_name,
@@ -83,20 +86,25 @@ def worst_game_per_year(
                 )
                 session.add(db_meme)
                 session.flush()  # get id without committing
+                logger.info(f"Meme created | id={db_meme.id} | game={db_meme.game_name}")
 
             existing_stats: MemeStats | None = session.exec(select(MemeStats).where(MemeStats.meme_id == db_meme.id)).one_or_none()
 
             if existing_stats is not None:
+                logger.info("Stats updated | increment access_count")
                 existing_stats.access_count += 1
                 existing_stats.last_accessed = get_time()
             else:
+                logger.info(f"Stats created | game={db_meme.game_name}")
                 db_stats = MemeStats(meme_id=db_meme.id, access_count=1, last_accessed=get_time())
                 session.add(db_stats)
 
             session.commit()  # one commit — both meme + stats, or nothing
+            logger.info(f"DB commit successful | game={db_meme.game_name}")
 
         except SQLAlchemyError:
             session.rollback()  # undo everything if anything fails
+            logger.error(f"DB rollback | failed to save | game={db_meme.game_name}", exc_info=True)
             raise HTTPException(  # noqa: B904
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Database operation failed."
             )
@@ -110,13 +118,15 @@ def worst_game_per_year(
 @app.get("/hall_of_shame", description="Welcome to the hall of shame. These games were memed so hard, they achieved immortality.")
 def hall_of_shame_stats(request: Request) -> list[MemeTopResponse]:
     with Session(engine) as session:
+        logger.info("Request received | hall_of_shame")
         max_count = session.exec(select(MemeStats.access_count).order_by(MemeStats.access_count.desc())).first()
 
         if max_count is None:
+            logger.warning("No data available | hall_of_shame")
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No memes yet. Peace has been restored... for now")
 
         results = session.exec(select(Meme, MemeStats).join(MemeStats, MemeStats.meme_id == Meme.id).where(MemeStats.access_count == max_count)).all()
-
+    logger.info("Response returned | hall_of_shame top memes")
     return [
         MemeTopResponse(
             game_name=db_meme.game_name,

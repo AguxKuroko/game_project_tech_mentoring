@@ -20,11 +20,12 @@ def rawg_api_call(year: int) -> RawgApiData | None:
         "page_size": 1,
         "metacritic": "1,100",  # ensure metascore exists
     }
-    logger.info(f"Fetching RAWG data | year={year}")
+    logger.info(f"Fetching RAWG API data | year={year}")
     try:
         response = requests.get(GAME_API_URL, params=params)
         response.raise_for_status()  # catch HTTP errors
     except requests.exceptions.RequestException:
+        logger.error(f"RAWG API request failed | year={year}", exc_info=True)
         raise HTTPException(  # noqa: B904
             status_code=status.HTTP_502_BAD_GATEWAY, detail="External game API request failed."
         )
@@ -33,14 +34,16 @@ def rawg_api_call(year: int) -> RawgApiData | None:
     results = api_raw_data.get("results", [])
 
     if not results:
+        logger.warning(f"No game data found | year={year}")
         return None
 
     game_raw = results[0]
 
     if not isinstance(game_raw.get("metacritic"), int):  # defense againt None from gameapi if happens
+        logger.warning(f"Missing metascore in RAWG response | year={year}")
         return None
 
-    logger.info("Fetching complited. Success data fetched")
+    logger.info(f"RAWG API fetch successful | year={year}")
     return RawgApiData(
         game_name=game_raw["name"],
         game_id=game_raw["id"],

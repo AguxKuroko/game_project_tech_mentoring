@@ -1,3 +1,4 @@
+import logging
 import re
 from contextlib import asynccontextmanager
 from io import BytesIO
@@ -12,6 +13,8 @@ from app.app_config import ConfigAppMode
 from app.db.db_models import Meme, MemeStats  # noqa: F401
 from app.db.engine import engine
 from app.models import RawgApiData
+
+logger = logging.getLogger(__name__)
 
 
 def extract_release_year(release_year_from_api: dict) -> str:
@@ -38,9 +41,11 @@ def prepare_images_for_openai(screenshots: list[str]) -> list[BytesIO]:
 
     for number, url in enumerate(screenshots[:3]):
         try:
+            logger.info(f"Fetching screenshot | index={number}")
             response = requests.get(url)
             response.raise_for_status()
         except requests.exceptions.RequestException:
+            logger.error(f"Screenshot download failed | url={url}", exc_info=True)
             raise HTTPException(  # noqa: B904
                 status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to download screenshot: {url}"
             )
@@ -49,7 +54,7 @@ def prepare_images_for_openai(screenshots: list[str]) -> list[BytesIO]:
         img.name = f"image_{number}.jpg"
 
         image_files.append(img)
-
+    logger.info(f"Prepared images for OpenAI | count={len(image_files)}")
     return image_files
 
 
@@ -156,6 +161,7 @@ async def lifespan(app: FastAPI):
 
 def generate_meme_without_images(game_data: RawgApiData, meme_mode: ConfigAppMode, client: OpenAI) -> ImagesResponse:
     """Fallback: generates a meme using only a prompt when no screenshots are provided."""
+    logger.info("Generating meme without screenshots")
     return client.images.generate(
         model="gpt-image-1",
         prompt=build_prompt(game_data, meme_mode),
