@@ -5,7 +5,7 @@ from io import BytesIO
 
 import requests
 from fastapi import FastAPI, HTTPException, status
-from openai import OpenAI
+from openai import BadRequestError, OpenAI
 from openai.types.images_response import ImagesResponse
 from sqlmodel import SQLModel
 
@@ -165,8 +165,15 @@ async def lifespan(app: FastAPI):
 def generate_meme_without_images(game_data: RawgApiData, meme_mode: ConfigAppMode, client: OpenAI) -> ImagesResponse:
     """Fallback: generates a meme using only a prompt when no screenshots are provided."""
     logger.info("Generating meme without screenshots", extra={"step": "generate_without_images"})
-    return client.images.generate(
-        model="gpt-image-1",
-        prompt=build_prompt(game_data, meme_mode),
-        size="1024x1024",
-    )
+    try:
+        return client.images.generate(
+            model="gpt-image-1",
+            prompt=build_prompt(game_data, meme_mode),
+            size="1024x1024",
+        )
+    except BadRequestError:
+        logger.error("Prompt blocked by OpenAI moderation", extra={"step": "generation_blocked"}, exc_info=True)
+
+        raise HTTPException(  # noqa: B904
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Meme generation failed due to content restrictions."
+        )
