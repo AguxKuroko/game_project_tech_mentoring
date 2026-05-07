@@ -1,0 +1,29 @@
+name: Scheduled Tests
+
+on:
+  schedule:
+    - cron: "0 9 */14 * *"   # every 14 days at 09:00 UTC
+  workflow_dispatch:
+
+jobs:
+  scheduled-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "poetry"
+
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install
+
+      - name: Run pytest
+        if: hashFiles('**/test_*.py') != ''
+        run: poetry run pytest --cov=app --cov-report=term-missing
