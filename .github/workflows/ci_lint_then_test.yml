@@ -25,11 +25,17 @@ jobs:
           python-version: "3.x"
           cache: "poetry"
 
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Check Poetry installation
+        run: poetry --version
+
       - name: Install dependencies
-        run: |
-          pip install poetry
-          poetry --version
-          poetry install
+        run: poetry install --no-interaction
 
       - name: Run Ruff (lint)
         run: poetry run ruff check .
@@ -37,13 +43,12 @@ jobs:
       - name: Check formatting
         run: poetry run ruff format --check .
 
-      - name: Run mypy # checks types,function signatures,return values
+      - name: Run mypy
         run: poetry run mypy .
 
   tests:
     runs-on: ubuntu-latest
-
-    needs: quality-check # will runn only if job before ends succefully
+    needs: quality-check
 
     steps:
       - name: Get repository code
@@ -55,14 +60,20 @@ jobs:
           python-version: "3.x"
           cache: "poetry"
 
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Check Poetry installation
+        run: poetry --version
+
       - name: Install dependencies
-        run: |
-          pip install poetry
-          poetry --version
-          poetry install
+        run: poetry install --no-interaction
 
       - name: Run pytest
-        if: hashFiles('**/test_*.py') != '' # if tests exsists run them if no skip
+        if: hashFiles('**/test_*.py') != ''
         run: |
           echo "Tests detected, running pytest"
           poetry run pytest --cov=app --cov-report=term-missing
