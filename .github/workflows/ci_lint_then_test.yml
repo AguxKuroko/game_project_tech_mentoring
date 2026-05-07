@@ -75,5 +75,12 @@ jobs:
       - name: Run pytest
         if: hashFiles('**/test_*.py') != ''
         run: |
-          echo "Tests detected, running pytest"
-          poetry run pytest
+          set +e
+          poetry run pytest --tb=short
+          EXIT=$?
+          set -e
+          if [ "$EXIT" = "5" ]; then
+            echo "⚠️ No tests collected — none exist on this branch yet."
+            exit 0
+          fi
+          exit $EXIT

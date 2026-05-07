@@ -33,4 +33,13 @@ jobs:
 
       - name: Run pytest
         if: hashFiles('**/test_*.py') != ''
-        run: poetry run pytest --cov=app --cov-report=term-missing
+        run: |
+          set +e
+          poetry run pytest --tb=short
+          EXIT=$?
+          set -e
+          if [ "$EXIT" = "5" ]; then
+            echo "⚠️ No tests collected — none exist on this branch yet."
+            exit 0
+          fi
+          exit $EXIT
