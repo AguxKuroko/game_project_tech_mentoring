@@ -76,4 +76,4 @@ jobs:
         if: hashFiles('**/test_*.py') != ''
         run: |
           echo "Tests detected, running pytest"
-          poetry run pytest --cov=app --cov-report=term-missing
+          poetry run pytest
