@@ -2,7 +2,7 @@ name: Scheduled Tests
 
 on:
   schedule:
-    - cron: "0 9 */14 * *"   # every 14 days at 09:00 UTC
+    - cron: "0 9 */14 * *"
   workflow_dispatch:
 
 jobs:
