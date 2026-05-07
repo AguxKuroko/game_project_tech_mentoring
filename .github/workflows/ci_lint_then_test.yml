@@ -22,12 +22,13 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
+          python-version: "3.x"
           cache: "poetry"
 
       - name: Install dependencies
         run: |
           pip install poetry
+          poetry --version
           poetry install
 
       - name: Run Ruff (lint)
@@ -51,12 +52,13 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
+          python-version: "3.x"
           cache: "poetry"
 
       - name: Install dependencies
         run: |
           pip install poetry
+          poetry --version
           poetry install
 
       - name: Run pytest
