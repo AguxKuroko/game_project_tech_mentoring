@@ -28,6 +28,10 @@ line-length = 160
 select = ["E", "F", "B", "N", "UP", "I"]
 ignore = ["B008"]
 
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
+
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2"
 pre-commit = "^3.7"
