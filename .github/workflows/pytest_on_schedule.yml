@@ -1,8 +1,18 @@
+# Scheduled Test Pipeline
+# Runs pytest automatically every 14 days at 9:00 AM UTC.
+# Purpose: catch silent breakages — if RAWG or OpenAI change their API responses,
+# or if any dependency update breaks something, this will catch it
+# even when no code changes are being made.
+# Can also be triggered manually from GitHub Actions UI via workflow_dispatch.
+
 name: Scheduled Tests
 
 on:
+  # Runs at 9:00 AM UTC every 14 days
+  # Cron format: minute hour day-of-month month day-of-week
   schedule:
     - cron: "0 9 */14 * *"
+  # Allows manual trigger from GitHub Actions UI
   workflow_dispatch:
 
 jobs:
@@ -17,11 +27,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+          # Cache Poetry dependencies to speed up runs
           cache: "poetry"
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
+          # Create virtualenv inside project folder (.venv) for caching
           virtualenvs-create: true
           virtualenvs-in-project: true
 
@@ -32,12 +44,17 @@ jobs:
         run: poetry install --no-interaction
 
       - name: Run pytest
+        # Only runs if test files exist in the repository
         if: hashFiles('**/test_*.py') != ''
         run: |
+          # set +e disables "exit on error" so we can capture pytest exit code manually
           set +e
           poetry run pytest --tb=short
           EXIT=$?
+          # Re-enable "exit on error" after capturing the code
           set -e
+          # Exit code 5 means pytest found no tests to collect — not a failure
+          # This can happen when tests exist on another branch but not main yet
           if [ "$EXIT" = "5" ]; then
             echo "⚠️ No tests collected — none exist on this branch yet."
             exit 0

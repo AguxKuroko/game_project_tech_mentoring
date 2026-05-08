@@ -1,3 +1,8 @@
+# CI Pipeline: Lint -> Test
+# Runs in two sequential jobs: quality-check must pass before tests run.
+# Triggers: push to main, pull requests targeting main, or manual run via GitHub Actions UI.
+# Concurrency: if a new run starts for the same branch, the previous one is cancelled automatically.
+
 name: CI - Lint -> Test
 
 on:
@@ -5,13 +10,17 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Allows manual trigger from GitHub Actions UI
   workflow_dispatch:
 
+# Prevent duplicate runs on the same branch — cancels old run if new one starts
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  # Job 1: Code quality checks — linting and formatting
+  # Fails fast if code style issues are found before running tests
   quality-check:
     runs-on: ubuntu-latest
 
@@ -22,6 +31,7 @@ jobs:
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
+          # Create virtualenv inside project folder (.venv) for caching
           virtualenvs-create: true
           virtualenvs-in-project: true
 
@@ -29,6 +39,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+          # Cache Poetry dependencies to speed up future runs
           cache: "poetry"
 
       - name: Check Poetry installation
@@ -37,15 +48,19 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-interaction
 
+      # Check for linting errors (unused imports, bad practices etc)
       - name: Run Ruff (lint)
         run: poetry run ruff check .
 
+      # Check code formatting without making changes — fails if formatting is off
       - name: Check formatting
         run: poetry run ruff format --check .
 
+      # Mypy type checking — disabled for now, uncomment when type hints are complete
       #- name: Run mypy
       #  run: poetry run mypy .
 
+  # Job 2: Run tests — only starts if quality-check job passes
   tests:
     runs-on: ubuntu-latest
     needs: quality-check
@@ -73,12 +88,17 @@ jobs:
         run: poetry install --no-interaction
 
       - name: Run pytest
+        # Only runs if test files exist in the repository
         if: hashFiles('**/test_*.py') != ''
         run: |
+          # set +e disables "exit on error" so we can capture pytest exit code manually
           set +e
           poetry run pytest --tb=short
           EXIT=$?
+          # Re-enable "exit on error" after capturing the code
           set -e
+          # Exit code 5 means pytest found no tests to collect — not a failure
+          # This can happen when tests exist on another branch but not the current one
           if [ "$EXIT" = "5" ]; then
             echo "⚠️ No tests collected — none exist on this branch yet."
             exit 0
