@@ -2,7 +2,7 @@
 
 > *Enter a year. Receive a cursed meme about the game that made players question everything.*
 ---
-[![CI - Lint -> Test](https://github.com/AguxKuroko/game_project_tech_mentoring/actions/workflows/ci_lint_then_test.yml/badge.svg)](https://github.com/AguxKuroko/game_project_tech_mentoring/actions/workflows/ci_lint_then_test.yml)
+[![CI - Detect changes -> Lint -> Test -> CI_status](https://github.com/AguxKuroko/game_project_tech_mentoring/actions/workflows/ci.yml/badge.svg)](https://github.com/AguxKuroko/game_project_tech_mentoring/actions/workflows/ci.yml)
 ---
 ![Python](https://img.shields.io/badge/Python-3.14-FF6B6B?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.135-FF9F43?logo=fastapi&logoColor=white)
@@ -243,6 +243,17 @@ poetry run pytest
 # Install pre-commit hooks
 poetry run pre-commit install
 ```
+
+---
+
+## ⚙️ CI/CD Pipeline
+
+Two GitHub Actions workflows keep the project in check:
+
+| Workflow | File | Triggers | What it does |
+|----------|------|----------|--------------|
+| **CI — Lint → Test** | `ci.yml` | Push / PR to `main`, manual | Detects what changed, then runs Ruff linting and the pytest suite. Skips docs-only edits and fails fast if linting breaks. |
+| **Scheduled Tests** | `scheduled_tests.yml` | 1st, 15th & 29th monthly (09:00 UTC), manual | Re-runs the test suite on a schedule as a periodic health check. |
 
 ---
 
