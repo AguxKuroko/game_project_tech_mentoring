@@ -26,6 +26,12 @@ year = st.number_input(
     max_value=2026,
 )
 
+if st.button("Generate meme", type="primary", width="stretch"):
+    if year is None:
+        st.warning("Pick a year first.")
+    else:
+        st.success(f"You picked {year}. (API call coming next.)")
+
 with st.sidebar:
     st.markdown("### About this app")
     st.markdown("A meme generator for the worst-rated games in history. " "Enter a year → receive a cursed AI-generated meme.")
