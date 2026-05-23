@@ -1,0 +1,7 @@
+# what not to ship with the image!!!
+.env
+.venv/
+__pycache__/
+.git/
+*.db
+app/db/memes/

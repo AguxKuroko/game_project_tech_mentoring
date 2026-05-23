@@ -2,9 +2,9 @@ import random
 
 import requests
 import streamlit as st
-from content import WAITING_MESSAGES
 
 from app.app_config import app_paths
+from streamlit_frontend.content import WAITING_MESSAGES
 
 st.set_page_config(
     page_title="Worst Game Meme Generator",
