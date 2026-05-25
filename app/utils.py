@@ -1,10 +1,11 @@
+import logging
 import re
 from contextlib import asynccontextmanager
 from io import BytesIO
 
 import requests
 from fastapi import FastAPI, HTTPException, status
-from openai import OpenAI
+from openai import BadRequestError, OpenAI
 from openai.types.images_response import ImagesResponse
 from sqlmodel import SQLModel
 
@@ -12,6 +13,8 @@ from app.app_config import ConfigAppMode
 from app.db.db_models import Meme, MemeStats  # noqa: F401
 from app.db.engine import get_engine
 from app.models import RawgApiData
+
+logger = logging.getLogger(__name__)
 
 
 def extract_release_year(release_year_from_api: dict) -> str:
@@ -45,11 +48,13 @@ def prepare_images_for_openai(screenshots: list[str]) -> list[BytesIO]:
 
     for number, url in enumerate(screenshots[:3]):
         try:
+            logger.info(f"Fetching screenshot | index={number}", extra={"index": number, "step": "fetch_screenshot"})
             response = requests.get(url)
             response.raise_for_status()
         except requests.exceptions.RequestException:
+            logger.error(f"Screenshot download failed | url={url}", extra={"url": url, "step": "download_error"}, exc_info=True)
             raise HTTPException(  # noqa: B904
-                status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to download screenshot: {url}"
+                status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Failed to download screenshot: {url}"
             )
 
         img = BytesIO(response.content)
@@ -57,6 +62,7 @@ def prepare_images_for_openai(screenshots: list[str]) -> list[BytesIO]:
 
         image_files.append(img)
 
+    logger.info(f"Prepared images for OpenAI | count={len(image_files)}", extra={"count": len(image_files), "step": "prepare_images"})
     return image_files
 
 
@@ -155,21 +161,26 @@ def clean_filename(game_data_name: str) -> str:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logger.info("Starting app", extra={"event": "startup"})
     print('🎮 Booting up the "Worst Game Meme Generator"... Brace yourself for terrible games! 🎮')
     SQLModel.metadata.create_all(get_engine())
     yield
+    logger.info("Shutting down app", extra={"event": "shutdown"})
     print("💀 The meme machine rests... until next time. 💀'")
 
 
 def generate_meme_without_images(game_data: RawgApiData, meme_mode: ConfigAppMode, client: OpenAI) -> ImagesResponse:
     """Fallback: generates a meme using only a prompt when no screenshots are provided."""
+    logger.info("Generating meme without screenshots", extra={"step": "generate_without_images"})
     try:
         return client.images.generate(
             model="gpt-image-1",
             prompt=build_prompt(game_data, meme_mode),
             size="1024x1024",
         )
-    except Exception:
+    except BadRequestError:
+        logger.error("Prompt blocked by OpenAI moderation", extra={"step": "generation_blocked"}, exc_info=True)
+
         raise HTTPException(  # noqa: B904
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate meme"
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Meme generation failed due to content restrictions."
         )

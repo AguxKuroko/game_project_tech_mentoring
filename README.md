@@ -2,16 +2,22 @@
 
 > *Enter a year. Receive a cursed meme about the game that made players question everything.*
 ---
-![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=blue)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.135-009688?logo=fastapi&logoColor=green)
-![Uvicorn](https://img.shields.io/badge/Uvicorn-ASGI-lightgrey)
-![OpenAI](https://img.shields.io/badge/OpenAI-GPT--Image-412991?logo=openai&logoColor=white)
-![SQLModel](https://img.shields.io/badge/SQLModel-0.0.37-pink)
-![Poetry](https://img.shields.io/badge/Poetry-Package%20Manager-60A5FA?logo=poetry&logoColor=orange)
-![Ruff](https://img.shields.io/badge/Ruff-Linter-D7FF64?logo=ruff&logoColor=black)
-![Pre-commit](https://img.shields.io/badge/Pre--commit-Code%20Quality-brightgreen)
+[![CI - Detect changes -> Lint -> Test -> CI_status](https://github.com/AguxKuroko/game_project_tech_mentoring/actions/workflows/ci.yml/badge.svg)](https://github.com/AguxKuroko/game_project_tech_mentoring/actions/workflows/ci.yml)
 ---
-
+![Python](https://img.shields.io/badge/Python-3.14-FF6B6B?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.135-FF9F43?logo=fastapi&logoColor=white)
+![Uvicorn](https://img.shields.io/badge/Uvicorn-ASGI-FFEAA7?logo=uvicorn&logoColor=black)
+![OpenAI](https://img.shields.io/badge/OpenAI-GPT--Image-A29BFE?logo=openai&logoColor=white)
+![SQLModel](https://img.shields.io/badge/SQLModel-0.0.37-FD79A8?logo=sqlite&logoColor=white)
+![Poetry](https://img.shields.io/badge/Poetry-Package%20Manager-74B9FF?logo=poetry&logoColor=white)
+![Ruff](https://img.shields.io/badge/Ruff-Linter-55EFC4?logo=ruff&logoColor=black)
+![Pre-commit](https://img.shields.io/badge/Pre--commit-Code%20Quality-6C5CE7?logo=pre-commit&logoColor=white)
+![pytest](https://img.shields.io/badge/pytest-Unit%20Tests-FDCB6E?logo=pytest&logoColor=black)
+![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI%2FCD-81ECEC?logo=githubactions&logoColor=black)
+![Logfire](https://img.shields.io/badge/Logfire-Observability-FF7675?logo=pydantic&logoColor=white)
+![Pydantic](https://img.shields.io/badge/Pydantic-Validation-E17055?logo=pydantic&logoColor=white)
+![RAWG](https://img.shields.io/badge/RAWG-Games%20API-00B894?logoColor=white)
+---
 ## 💡 What Is This?
 
 A **Python backend + data engineering** project disguised as a meme generator.
@@ -218,9 +224,10 @@ app/
 
 ---
 
-## 🥚 Easter Egg
+## 🥚 Easter Egg & 🐾 Kuroko
 
-There's a hidden mode buried in the code. If you're curious enough, dig through the source and find it yourself.
+Kuroko is my dog and the real co-creator of this project. She's currently kicking cancer's ass through chemotherapy — for the second time — like the absolute fighter she is. 🐾 She deserved to be immortalized somewhere, so she became the welcome screen, got turned into a cursed AI meme with hypnotic glowing eyes, and somewhere in this project there's a secret mode dedicated to her.
+If you're curious enough to find it, you'll know it when you see it. 🐾
 
 ---
 
@@ -236,6 +243,17 @@ poetry run pytest
 # Install pre-commit hooks
 poetry run pre-commit install
 ```
+
+---
+
+## ⚙️ CI/CD Pipeline
+
+Two GitHub Actions workflows keep the project in check:
+
+| Workflow | File | Triggers | What it does |
+|----------|------|----------|--------------|
+| **CI — Lint → Test** | `ci.yml` | Push / PR to `main`, manual | Detects what changed, then runs Ruff linting and the pytest suite. Skips docs-only edits and fails fast if linting breaks. |
+| **Scheduled Tests** | `scheduled_tests.yml` | 1st, 15th & 29th monthly (09:00 UTC), manual | Re-runs the test suite on a schedule as a periodic health check. |
 
 ---
 
