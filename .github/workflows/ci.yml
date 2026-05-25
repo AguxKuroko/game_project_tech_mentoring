@@ -1,0 +1,133 @@
+# CI Pipeline: Detect changes -> Lint -> Test -> CI_status
+#
+# Jobs (run in this order):
+#   changes       - detects whether any non-docs file changed; lets lint/test skip on docs-only edits
+#   quality-check - Ruff lint + format check; runs only when code changed (or when chosen on a manual run)
+#   tests         - pytest; runs after quality-check. Fail-fast: skipped if lint failed
+#   ci-status     - always runs and reports a single pass/fail.
+#
+# Triggers:
+#   - push to main
+#   - pull requests targeting main
+#   - manual run via the GitHub Actions UI, with a dropdown to choose which jobs run (all / lint / tests)
+#
+# Concurrency: if a new run starts for the same branch, the previous one is cancelled automatically.
+
+name: CI - Detect changes -> Lint -> Test -> CI_status
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      run_jobs:
+        description: "Which jobs to run (manual runs only)"
+        type: choice
+        default: all
+        options:
+          - all
+          - lint
+          - tests
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.14"
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - '**'
+              - '!**/*.md'
+
+  quality-check:
+    needs: changes
+    if: >-
+      ${{ (github.event_name == 'workflow_dispatch' && (inputs.run_jobs == 'all' || inputs.run_jobs == 'lint'))
+          || (github.event_name != 'workflow_dispatch' && needs.changes.outputs.code == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get repository code
+        uses: actions/checkout@v4
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "poetry"
+      - name: Check Poetry installation
+        run: poetry --version
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: Run Ruff (lint)
+        run: poetry run ruff check .
+      - name: Check formatting
+        run: poetry run ruff format --check .
+
+  tests:
+    needs: [changes, quality-check]
+    if: >-
+      ${{ always()
+          && needs.quality-check.result != 'failure'
+          && ( (github.event_name == 'workflow_dispatch' && (inputs.run_jobs == 'all' || inputs.run_jobs == 'tests'))
+              || (github.event_name != 'workflow_dispatch' && needs.changes.outputs.code == 'true') ) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get repository code
+        uses: actions/checkout@v4
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "poetry"
+      - name: Check Poetry installation
+        run: poetry --version
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: Run pytest
+        if: hashFiles('**/test_*.py') != ''
+        run: |
+          set +e
+          poetry run pytest --tb=short
+          EXIT=$?
+          set -e
+          if [ "$EXIT" = "5" ]; then
+            echo "No tests collected — none exist on this branch yet."
+            exit 0
+          fi
+          exit $EXIT
+
+  ci-status:
+    if: always()
+    needs: [quality-check, tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          if [ "${{ needs.quality-check.result }}" = "failure" ] || [ "${{ needs.tests.result }}" = "failure" ]; then
+            echo "A required job failed."
+            exit 1
+          fi
+          echo "All good (passed or skipped)."

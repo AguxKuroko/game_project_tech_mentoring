@@ -24,15 +24,19 @@ package-mode = false
 [tool.ruff]
 line-length = 160
 
-
 [tool.ruff.lint]
 select = ["E", "F", "B", "N", "UP", "I"]
 ignore = ["B008"]
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2"
 pre-commit = "^3.7"
 ruff = "^0.15.5"
+mypy = "^2.0.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
