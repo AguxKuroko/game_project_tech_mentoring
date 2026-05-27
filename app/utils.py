@@ -49,7 +49,7 @@ def prepare_images_for_openai(screenshots: list[str]) -> list[BytesIO]:
     for number, url in enumerate(screenshots[:3]):
         try:
             logger.info(f"Fetching screenshot | index={number}", extra={"index": number, "step": "fetch_screenshot"})
-            response = requests.get(url)
+            response = requests.get(url, timeout=10)
             response.raise_for_status()
         except requests.exceptions.RequestException:
             logger.error(f"Screenshot download failed | url={url}", extra={"url": url, "step": "download_error"}, exc_info=True)

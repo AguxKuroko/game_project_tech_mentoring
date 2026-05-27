@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -8,4 +10,6 @@ class ConfigApp(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env")
 
 
-api_game_key = ConfigApp()
+@lru_cache
+def get_api_keys() -> ConfigApp:
+    return ConfigApp()

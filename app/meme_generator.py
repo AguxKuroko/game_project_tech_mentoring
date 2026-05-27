@@ -4,7 +4,7 @@ from pathlib import Path
 
 from openai import BadRequestError, OpenAI
 
-from app.api_keys_config import api_game_key
+from app.api_keys_config import get_api_keys
 from app.app_config import ConfigAppMode, app_paths
 from app.models import RawgApiData
 from app.utils import build_prompt, clean_filename, extract_screenshots, generate_meme_without_images, prepare_images_for_openai
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def generate_game_meme(game_data: RawgApiData, meme_mode: ConfigAppMode, save: bool = True) -> Path | bytes:
     logger.info("Initializing OpenAI client", extra={"step": "init_openai"})
-    client = OpenAI(api_key=api_game_key.OPEN_AI_API_KEY)
+    client = OpenAI(api_key=get_api_keys().OPEN_AI_API_KEY)
 
     images = prepare_images_for_openai(extract_screenshots(game_data.game_screenhosts))
 
