@@ -42,6 +42,7 @@ def generate_game_meme(game_data: RawgApiData, meme_mode: ConfigAppMode, save: b
     if save:
         logger.info(f"Saving meme | game={game_data.game_name}", extra={"game_name": game_data.game_name, "step": "save_meme"})
         file_path = app_paths.memes_dir / f"{clean_filename(game_data.game_name)}_{game_data.game_release_year}.png"
+        file_path.parent.mkdir(parents=True, exist_ok=True)
         file_path.write_bytes(image_bytes)
         return file_path
 

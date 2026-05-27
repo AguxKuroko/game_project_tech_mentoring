@@ -1,9 +1,11 @@
 from io import BytesIO
 from unittest.mock import Mock, patch
 
+import httpx
 import pytest
 import requests
 from fastapi import HTTPException
+from openai import BadRequestError
 
 from app.utils import build_prompt, clean_filename, extract_genres, extract_release_year, generate_meme_without_images, prepare_images_for_openai
 
@@ -116,7 +118,14 @@ class TestGenerateMemeWithoutImages:
     def test_generate_meme_wihtou_images_failure(self, rawg_api_fake_game_without_screenshots):
         mock_client = Mock()
 
-        mock_client.images.generate.side_effect = Exception("boom")
+        mock_client.images.generate.side_effect = BadRequestError(
+            message="content blocked",
+            response=httpx.Response(
+                status_code=400,
+                request=httpx.Request("POST", "https://api.openai.com/v1/images/generations"),
+            ),
+            body=None,
+        )
 
         with pytest.raises(HTTPException):
             generate_meme_without_images(rawg_api_fake_game_without_screenshots, "normal", mock_client)

@@ -182,5 +182,5 @@ def generate_meme_without_images(game_data: RawgApiData, meme_mode: ConfigAppMod
         logger.error("Prompt blocked by OpenAI moderation", extra={"step": "generation_blocked"}, exc_info=True)
 
         raise HTTPException(  # noqa: B904
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Meme generation failed due to content restrictions."
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Meme generation failed due to content restrictions."
         )
