@@ -8,7 +8,7 @@ from openai import OpenAI
 from openai.types.images_response import ImagesResponse
 from sqlmodel import SQLModel
 
-from app.app_config import ConfigAppMode
+from app.app_config import ConfigAppMode, app_paths
 from app.db.db_models import Meme, MemeStats  # noqa: F401
 from app.db.engine import engine
 from app.models import RawgApiData
@@ -149,6 +149,8 @@ def clean_filename(game_data_name: str) -> str:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print('🎮 Booting up the "Worst Game Meme Generator"... Brace yourself for terrible games! 🎮')
+    print("🌐 Open http://localhost:8000/docs in your browser")
+    app_paths.memes_dir.mkdir(parents=True, exist_ok=True)
     SQLModel.metadata.create_all(engine)
     yield
     print("💀 The meme machine rests... until next time. 💀'")
