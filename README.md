@@ -185,12 +185,21 @@ poetry install
 
 ### Environment Variables
 
-Create a `.env` file in the project root:
+Copy `.env.example` to `.env` and fill in your own values:
 
-```env
-RAWG_API_KEY=your_rawg_api_key_here
-OPEN_AI_API_KEY=your_openai_api_key_here
+```bash
+cp .env.example .env
 ```
+
+Then edit `.env` with:
+
+- **`RAWG_API_KEY`** — free key from [rawg.io/apidocs](https://rawg.io/apidocs)
+- **`OPEN_AI_API_KEY`** — from [platform.openai.com](https://platform.openai.com/api-keys) *(image generation costs real money per call)*
+- **`BACKEND_API_KEY`** — generate any random string to protect the API from random callers:
+  ```bash
+  poetry run python -c "import secrets; print(secrets.token_urlsafe(32))"
+  ```
+  Use the same value in your Streamlit frontend config so backend and frontend agree on the shared secret.
 
 ### Run
 

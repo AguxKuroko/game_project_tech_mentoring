@@ -55,7 +55,7 @@ if st.button("Generate meme", type="primary", width="stretch"):
 
 with st.sidebar:
     st.markdown("### About this app")
-    st.markdown("A meme generator for the worst-rated games in history. " "Enter a year → receive a cursed AI-generated meme.")
+    st.markdown("A meme generator for the worst-rated games in history. Enter a year → receive a cursed AI-generated meme.")
 
     st.divider()
 
