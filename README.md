@@ -3,6 +3,7 @@
 > *Enter a year. Receive a cursed meme about the game that made players question everything.*
 ---
 [![CI - Detect changes -> Lint -> Test -> CI_status](https://github.com/AguxKuroko/game_project_tech_mentoring/actions/workflows/ci.yml/badge.svg)](https://github.com/AguxKuroko/game_project_tech_mentoring/actions/workflows/ci.yml)
+[![Scheduled Tests](https://github.com/AguxKuroko/game_project_tech_mentoring/actions/workflows/scheduled_tests.yml/badge.svg)](https://github.com/AguxKuroko/game_project_tech_mentoring/actions/workflows/scheduled_tests.yml)
 ---
 ![Python](https://img.shields.io/badge/Python-3.14-FF6B6B?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.135-FF9F43?logo=fastapi&logoColor=white)

@@ -6,6 +6,9 @@ import streamlit as st
 from app.app_config import app_paths
 from streamlit_frontend.content import WAITING_MESSAGES
 
+BACKEND_API_KEY = st.secrets["BACKEND_API_KEY"]
+
+
 st.set_page_config(
     page_title="Worst Game Meme Generator",
     page_icon="🎮",
@@ -37,8 +40,11 @@ if st.button("Generate meme", type="primary", width="stretch"):
     else:
         fast_api_url = f"http://localhost:8000/worst_game/{year}?format=image"
 
-        with st.spinner(random.choice(WAITING_MESSAGES)):  # spinner for slow operation only
-            response = requests.get(fast_api_url)
+        with st.spinner(random.choice(WAITING_MESSAGES)):
+            response = requests.get(
+                fast_api_url,
+                headers={"X-BACKEND-KEY": BACKEND_API_KEY},
+            )
 
         if response.status_code == 200:
             st.image(response.content)
