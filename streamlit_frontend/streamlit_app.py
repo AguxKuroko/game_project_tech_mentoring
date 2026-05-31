@@ -5,8 +5,10 @@ import streamlit as st
 
 from app.app_config import app_paths
 from streamlit_frontend.content import WAITING_MESSAGES
+from streamlit_frontend.st_utilis import get_current_year
 
 BACKEND_API_KEY = st.secrets["BACKEND_API_KEY"]
+BACKEND_URL = st.secrets["BACKEND_URL"]
 
 
 st.set_page_config(
@@ -31,14 +33,14 @@ year = st.number_input(
     value=None,
     placeholder="e.g. 2015",
     min_value=1970,
-    max_value=2026,
+    max_value=get_current_year(),
 )
 
 if st.button("Generate meme", type="primary", width="stretch"):
     if year is None:
         st.warning("Pick a year first.")
     else:
-        fast_api_url = f"http://localhost:8000/worst_game/{year}?format=image"
+        fast_api_url = f"{BACKEND_URL}/worst_game/{year}?format=image"
 
         with st.spinner(random.choice(WAITING_MESSAGES)):
             response = requests.get(

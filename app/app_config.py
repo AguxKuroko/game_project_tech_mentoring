@@ -1,6 +1,16 @@
 from enum import StrEnum, auto
 from pathlib import Path
 
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class PathSettings(BaseSettings):
+    DB_DIR: Path | None = None
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+
+path_settings = PathSettings()
+
 
 class ConfigPath:
     def __init__(self):
@@ -16,7 +26,7 @@ class ConfigPath:
 
     @property
     def db_dir(self):
-        return self._app_base_dir / "db"
+        return path_settings.DB_DIR or self._app_base_dir / "db"
 
     @property
     def memes_dir(self) -> Path:

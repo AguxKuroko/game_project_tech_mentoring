@@ -7,7 +7,7 @@ class ConfigApp(BaseSettings):
     BACKEND_API_KEY: str
     LOGFIRE_TOKEN: str
 
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
 api_game_key = ConfigApp()
