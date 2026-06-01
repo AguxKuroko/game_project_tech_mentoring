@@ -3,8 +3,8 @@ import random
 import requests
 import streamlit as st
 
-from app.app_config import app_paths
 from streamlit_frontend.content import WAITING_MESSAGES
+from streamlit_frontend.st_config import frontend_paths
 from streamlit_frontend.st_utilis import get_current_year
 
 BACKEND_API_KEY = st.secrets["BACKEND_API_KEY"]
@@ -75,4 +75,4 @@ with st.sidebar:
     )
     st.divider()
 
-    st.image(app_paths.home_image, width=200)
+    st.image(frontend_paths.welcome_image, width=200)

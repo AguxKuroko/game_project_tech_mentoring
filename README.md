@@ -18,6 +18,10 @@
 ![Logfire](https://img.shields.io/badge/Logfire-Observability-FF7675?logo=pydantic&logoColor=white)
 ![Pydantic](https://img.shields.io/badge/Pydantic-Validation-E17055?logo=pydantic&logoColor=white)
 ![RAWG](https://img.shields.io/badge/RAWG-Games%20API-00B894?logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-Frontend-FF4B4B?logo=streamlit&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Container-2496ED?logo=docker&logoColor=white)
+![Fly.io](https://img.shields.io/badge/Fly.io-Backend%20Host-7B2CBF?logo=flydotio&logoColor=white)
+![Streamlit Cloud](https://img.shields.io/badge/Streamlit%20Cloud-Frontend%20Host-FF4B4B?logo=streamlit&logoColor=white)
 ---
 ## 💡 What Is This?
 
@@ -101,6 +105,40 @@ The prompt is **built dynamically** from real game data (title, genre, metascore
 
 ---
 
+## 🌐 Deployment Architecture
+
+The app runs as two independent services that communicate over HTTPS — backend hosted on **Fly.io** (Dockerized), frontend hosted on **Streamlit Community Cloud**.
+
+```mermaid
+flowchart LR
+    User(["👤 User Browser"])
+    Frontend["🎨 Streamlit Frontend<br/>(Streamlit Community Cloud)"]
+    Backend["⚡ FastAPI Backend<br/>(Docker on Fly.io · Amsterdam)"]
+    Volume[("📀 SQLite + memes<br/>Fly persistent volume")]
+    RAWG["🎮 RAWG API"]
+    OpenAI["🤖 OpenAI gpt-image-1"]
+    Logfire["📊 Logfire"]
+
+    User -->|"HTTPS"| Frontend
+    Frontend -->|"HTTPS + X-BACKEND-KEY"| Backend
+    Backend <--> Volume
+    Backend -->|"game data"| RAWG
+    Backend -->|"image generation"| OpenAI
+    Backend -->|"traces & metrics"| Logfire
+```
+
+| Concern | How it's handled |
+|---------|------------------|
+| **Frontend deploy** | Streamlit Community Cloud auto-deploys from `main` whenever `streamlit_frontend/` changes |
+| **Backend deploy** | GitHub Actions runs `flyctl deploy` only on push to `main` AND only when backend files actually changed (paths-filter gate) |
+| **Secrets — backend** | `fly secrets set ...` — encrypted in Fly's vault, injected as env vars at container startup |
+| **Secrets — frontend** | Streamlit Cloud's dashboard secrets form — `BACKEND_URL` points at the Fly URL in production, `localhost:8000` locally |
+| **Shared `BACKEND_API_KEY`** | Same value in both Fly secrets and Streamlit Cloud secrets — backend rejects callers without it (401) |
+| **Persistent data** | Fly volume mounted at `/data` — SQLite DB + generated memes survive deploys and restarts |
+| **Cost discipline** | `auto_stop_machines = 'stop'` + `min_machines_running = 0` — backend sleeps when idle, wakes on incoming request (~3s cold start) |
+
+---
+
 ## 🚀 Endpoints
 
 | Method | Route | Description |
@@ -154,26 +192,47 @@ Returns the most-viewed meme(s) — the games that were memed so hard they achie
 | Layer | Technology |
 |-------|-----------|
 | **Language** | Python 3.14 |
-| **Framework** | FastAPI + Uvicorn |
+| **Backend framework** | FastAPI + Uvicorn |
+| **Frontend** | Streamlit |
 | **Validation** | Pydantic v2 |
 | **Database** | SQLite via SQLModel |
 | **AI / Image Gen** | OpenAI API (`gpt-image-1`) |
 | **Game Data** | RAWG Video Games API |
+| **Observability** | Logfire (OpenTelemetry under the hood) |
 | **Package Manager** | Poetry |
-| **Linting** | Ruff |
+| **Container** | Docker |
+| **Backend hosting** | Fly.io (Amsterdam region, scale-to-zero) |
+| **Frontend hosting** | Streamlit Community Cloud |
+| **CI/CD** | GitHub Actions |
+| **Linting & formatting** | Ruff |
+| **Testing** | pytest |
 | **Git Hooks** | pre-commit |
 
 ---
 
 ## ⚡ Quick Start
 
-### Prerequisites
+### 🌍 Try it live (no install needed)
+
+| What | Where |
+|------|-------|
+| Frontend (Streamlit UI) | `https://<your-subdomain>.streamlit.app` *(deployed to Streamlit Community Cloud)* |
+| Backend Swagger docs | https://worst-game-meme.fly.dev/docs |
+
+> The Fly.io backend sleeps when idle to save cost. First request after a while takes ~3-5s while the machine wakes up.
+
+---
+
+### 🖥 Run locally
+
+#### Prerequisites
 
 - Python 3.14
 - [Poetry](https://python-poetry.org/)
 - API keys for **RAWG** and **OpenAI**
+- A **Logfire** token (free at [logfire.pydantic.dev](https://logfire.pydantic.dev))
 
-### Setup
+#### Setup
 
 ```bash
 # Clone the repo
@@ -184,7 +243,7 @@ cd game_project_tech_mentoring
 poetry install
 ```
 
-### Environment Variables
+#### Environment variables (`.env`)
 
 Copy `.env.example` to `.env` and fill in your own values:
 
@@ -200,36 +259,93 @@ Then edit `.env` with:
   ```bash
   poetry run python -c "import secrets; print(secrets.token_urlsafe(32))"
   ```
-  Use the same value in your Streamlit frontend config so backend and frontend agree on the shared secret.
+  Use the **same value** in your Streamlit frontend config — backend and frontend share this secret.
+- **`LOGFIRE_TOKEN`** — write token from the [Logfire dashboard](https://logfire.pydantic.dev)
 
-### Run
+---
+
+### Option 1 — Backend only (FastAPI + Swagger UI)
+
+If you just want to poke the API directly without the Streamlit frontend:
 
 ```bash
-poetry run uvicorn app.fast_api_endpoints:app
+poetry run uvicorn app.fast_api_endpoints:app --reload
 ```
 
-Then open [http://localhost:8000/docs](http://localhost:8000/docs) for the interactive Swagger UI.
+Then open [http://localhost:8000/docs](http://localhost:8000/docs) for the interactive Swagger UI. Click **Authorize** at the top right and paste your `BACKEND_API_KEY` to call protected endpoints.
+
+### Option 2 — Backend + Streamlit frontend (full app)
+
+You'll need **two terminals**.
+
+**First — create the frontend's local secrets file:**
+
+`.streamlit/secrets.toml`:
+
+```toml
+BACKEND_API_KEY = "same-value-as-in-your-.env"
+BACKEND_URL = "http://localhost:8000"
+```
+
+This file is gitignored — only for local dev. In production, secrets live in Streamlit Cloud's dashboard.
+
+**Terminal 1 — backend:**
+
+```bash
+poetry run uvicorn app.fast_api_endpoints:app --reload
+```
+
+**Terminal 2 — frontend:**
+
+```bash
+poetry run streamlit run streamlit_frontend/streamlit_app.py
+```
+
+Then open [http://localhost:8501](http://localhost:8501). The Streamlit UI makes HTTP calls to your local backend on `8000` — both processes must be running.
 
 ---
 
 ## 📂 Project Structure
 
 ```
-app/
-├── fast_api_endpoints.py   # API routes & main FastAPI app
-├── api_keys_config.py      # Environment-based config (Pydantic Settings)
-├── app_config.py           # Paths & response format enum
-├── meme_generator.py       # OpenAI image generation logic
-├── models.py               # Pydantic models (RawgApiData, MemeGeneratorJsonData)
-├── rawg_api.py             # RAWG API integration
-├── utils.py                # Helpers: prompts, filename cleanup, lifespan
+app/                              # FastAPI backend (deployed to Fly.io in Docker)
+├── fast_api_endpoints.py         # API routes & main FastAPI app
+├── api_keys_config.py            # Pydantic-settings config (.env loader)
+├── app_config.py                 # Paths + DB_DIR override for Fly volume
+├── auth.py                       # X-BACKEND-KEY header verification
+├── logging_config.py             # Logfire + rotating file + console logging
+├── meme_generator.py             # OpenAI image generation logic
+├── models.py                     # Pydantic models (RawgApiData, MemeGeneratorJsonData)
+├── rawg_api.py                   # RAWG API integration
+├── utils.py                      # Helpers: prompts, filename cleanup, lifespan
 ├── home_endpoint_image/
-│   └── welcome.png         # Home screen image
+│   └── welcome.png               # Backend home screen image (served at GET /)
 └── db/
-    ├── db_config.py        # Database URL config
-    ├── db_models.py        # SQLModel tables (Meme, MemeStats)
-    ├── db_utils.py         # UTC timestamp helper
-    └── engine.py           # SQLModel engine setup
+    ├── db_config.py              # Database URL config
+    ├── db_models.py              # SQLModel tables (Meme, MemeStats)
+    ├── db_utils.py               # UTC timestamp helper
+    └── engine.py                 # SQLModel engine setup
+
+streamlit_frontend/               # Streamlit frontend (deployed to Streamlit Community Cloud)
+├── streamlit_app.py              # Main UI entry point
+├── st_config.py                  # Frontend-local path config (assets folder)
+├── st_utilis.py                  # Misc helpers (current year, etc.)
+├── content.py                    # Waiting messages shown while generating
+├── requirements.txt              # Slim deps for Streamlit Cloud (streamlit + requests only)
+└── assets/
+    └── welcome.png               # Frontend sidebar image (frontend owns its own copy)
+
+.streamlit/
+├── config.toml                   # Theme (committed)
+└── secrets.toml                  # Local-only secrets (gitignored — production uses Cloud dashboard)
+
+.github/workflows/
+├── ci.yml                        # Detect changes → Lint → Test → Deploy backend → Status
+└── scheduled_tests.yml           # Monthly health-check test runs
+
+Dockerfile                        # Backend container build (Python 3.14-slim + Poetry)
+fly.toml                          # Fly.io app config (volume, region, auto-stop, scale)
+pyproject.toml                    # Backend deps + tooling config (Poetry)
 ```
 
 ---
@@ -258,12 +374,44 @@ poetry run pre-commit install
 
 ## ⚙️ CI/CD Pipeline
 
-Two GitHub Actions workflows keep the project in check:
+A single GitHub Actions workflow handles detect → lint → test → deploy. The backend deploys to Fly.io only when its files actually changed; the Streamlit frontend is deployed by Streamlit Community Cloud directly from `main`.
+
+### Workflows
 
 | Workflow | File | Triggers | What it does |
 |----------|------|----------|--------------|
-| **CI — Lint → Test** | `ci.yml` | Push / PR to `main`, manual | Detects what changed, then runs Ruff linting and the pytest suite. Skips docs-only edits and fails fast if linting breaks. |
-| **Scheduled Tests** | `scheduled_tests.yml` | 1st, 15th & 29th monthly (09:00 UTC), manual | Re-runs the test suite on a schedule as a periodic health check. |
+| **CI → Deploy** | `ci.yml` | Push / PR to `main`, manual | Detects changes, runs Ruff + pytest, deploys backend to Fly.io on push to `main` (when backend files changed) |
+| **Scheduled Tests** | `scheduled_tests.yml` | 1st, 15th & 29th monthly (09:00 UTC), manual | Periodic test suite health check |
+
+### Pipeline stages (`ci.yml`)
+
+```
+changes ─▶ quality-check ─▶ tests ─▶ deploy-backend ─▶ ci-status
+   │           │              │             │
+   │           │              │             ├─ only on push to main (never on PRs)
+   │           │              │             ├─ only if backend/Docker/fly files changed
+   │           │              │             ├─ only if lint + tests passed
+   │           │              │             └─ runs `flyctl deploy --remote-only`
+   │           │              │
+   │           │              └─ pytest (skipped on docs-only changes)
+   │           │
+   │           └─ Ruff lint + format check (skipped on docs-only changes)
+   │
+   └─ paths-filter — emits two boolean flags as job outputs:
+        • code     = anything non-`.md` changed   → gates lint + tests
+        • backend  = files Fly cares about changed → gates deploy
+```
+
+Two filters → two different gates:
+- **Frontend-only edit** (e.g. `streamlit_frontend/streamlit_app.py`) → lint + tests run, Fly deploy **skipped** (Streamlit Cloud handles the frontend redeploy on its own).
+- **Backend edit** (e.g. `app/...`, `Dockerfile`, `fly.toml`) → full pipeline including Fly deploy.
+- **Docs-only edit** (e.g. `README.md`) → everything skipped, `ci-status` still passes.
+
+### Secrets used by CI/CD
+
+| Secret | Where it lives | Used by |
+|--------|----------------|---------|
+| `FLY_API_TOKEN` | GitHub Actions repository secret | `deploy-backend` job — authenticates `flyctl deploy` |
 
 ---
 
