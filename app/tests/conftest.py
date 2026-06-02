@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import pytest
 
 from app.models import RawgApiData
@@ -64,3 +66,13 @@ def valid_fake_json():
             }
         ]
     }
+
+
+@pytest.fixture
+def get_fake_api_keys():
+    fake = Mock()
+    fake.OPEN_AI_API_KEY = "fake-key"
+    fake.BACKEND_API_KEY = "fake-backend"
+    fake.LOGFIRE_TOKEN = "fake-logifre"
+    fake.RAWG_API_KEY = "fake-rawg"
+    return fake
