@@ -1,5 +1,5 @@
 [project]
-name = "game-project-tech-mentoring"
+name = "worst-games-memed"
 version = "0.1.0"
 description = "Pick a year, receive a cursed AI meme about the worst-rated game of that year. RAWG API + OpenAI image generation."
 authors = [

@@ -54,7 +54,7 @@ def render_sidebar():
         st.markdown("Engineered with questionable taste")
         st.link_button(
             "Check on GitHub",
-            "https://github.com/AguxKuroko/game_project_tech_mentoring",
+            "https://github.com/AguxKuroko/worst-games-memed",
         )
         st.divider()
 

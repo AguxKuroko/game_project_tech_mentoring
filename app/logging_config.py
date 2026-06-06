@@ -3,7 +3,7 @@ from logging.handlers import RotatingFileHandler
 
 import logfire
 
-from app.api_keys_config import api_game_key
+from app.api_keys_config import get_api_keys
 from app.app_config import app_paths
 
 
@@ -33,5 +33,5 @@ def setup_logging():
 
     logfire.configure(
         service_name="worst-game-meme-app",
-        token=api_game_key.LOGFIRE_TOKEN,
+        token=get_api_keys().LOGFIRE_TOKEN,
     )

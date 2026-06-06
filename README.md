@@ -2,8 +2,8 @@
 
 > *Enter a year. Receive a cursed meme about the game that made players question everything.*
 ---
-[![CI - Detect changes -> Lint -> Test -> CI_status](https://github.com/AguxKuroko/game_project_tech_mentoring/actions/workflows/ci.yml/badge.svg)](https://github.com/AguxKuroko/game_project_tech_mentoring/actions/workflows/ci.yml)
-[![Scheduled Tests](https://github.com/AguxKuroko/game_project_tech_mentoring/actions/workflows/scheduled_tests.yml/badge.svg)](https://github.com/AguxKuroko/game_project_tech_mentoring/actions/workflows/scheduled_tests.yml)
+[![CI - Detect changes -> Lint -> Test -> CI_status](https://github.com/AguxKuroko/worst-games-memed/actions/workflows/ci.yml/badge.svg)](https://github.com/AguxKuroko/worst-games-memed/actions/workflows/ci.yml)
+[![Scheduled Tests](https://github.com/AguxKuroko/worst-games-memed/actions/workflows/scheduled_tests.yml/badge.svg)](https://github.com/AguxKuroko/worst-games-memed/actions/workflows/scheduled_tests.yml)
 ---
 ![Python](https://img.shields.io/badge/Python-3.14-FF6B6B?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.135-FF9F43?logo=fastapi&logoColor=white)
@@ -236,8 +236,8 @@ Returns the most-viewed meme(s) — the games that were memed so hard they achie
 
 ```bash
 # Clone the repo
-git clone https://github.com/AguxKuroko/game_project_tech_mentoring.git
-cd game_project_tech_mentoring
+git clone https://github.com/AguxKuroko/worst-games-memed.git
+cd worst-games-memed
 
 # Install dependencies
 poetry install
