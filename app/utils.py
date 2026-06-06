@@ -11,23 +11,30 @@ from sqlmodel import SQLModel
 
 from app.app_config import ConfigAppMode
 from app.db.db_models import Meme, MemeStats  # noqa: F401
-from app.db.engine import engine
+from app.db.engine import get_engine
 from app.models import RawgApiData
 
 logger = logging.getLogger(__name__)
 
 
 def extract_release_year(release_year_from_api: dict) -> str:
-    """Extract YEAR from full datetime str"""
+    """Extract YEAR from full datetime str or int"""
     year = release_year_from_api.get("released")
-    if not year:
+
+    if not year:  # covers None, empty string, and invalid 0 values
         return "Data not provided"
-    return year.split("-")[0]
+
+    if isinstance(year, int):
+        return str(year)
+    elif isinstance(year, str):
+        return year.split("-")[0]
+
+    return "Data not provided"
 
 
 def extract_genres(genres: list[dict]) -> list[str]:
     """Extract all genre names for the worst game of a given year."""
-    return [genre["name"] for genre in genres]  # if no values in a list we will get an empty list
+    return [result for genre in genres if (result := genre.get("name"))]
 
 
 def extract_screenshots(screenshots_raw: list[dict]) -> list[str]:
@@ -42,7 +49,7 @@ def prepare_images_for_openai(screenshots: list[str]) -> list[BytesIO]:
     for number, url in enumerate(screenshots[:3]):
         try:
             logger.info(f"Fetching screenshot | index={number}", extra={"index": number, "step": "fetch_screenshot"})
-            response = requests.get(url)
+            response = requests.get(url, timeout=10)
             response.raise_for_status()
         except requests.exceptions.RequestException:
             logger.error(f"Screenshot download failed | url={url}", extra={"url": url, "step": "download_error"}, exc_info=True)
@@ -156,7 +163,7 @@ def clean_filename(game_data_name: str) -> str:
 async def lifespan(app: FastAPI):
     logger.info("Starting app", extra={"event": "startup"})
     print('🎮 Booting up the "Worst Game Meme Generator"... Brace yourself for terrible games! 🎮')
-    SQLModel.metadata.create_all(engine)
+    SQLModel.metadata.create_all(get_engine())
     yield
     logger.info("Shutting down app", extra={"event": "shutdown"})
     print("💀 The meme machine rests... until next time. 💀'")
@@ -175,5 +182,5 @@ def generate_meme_without_images(game_data: RawgApiData, meme_mode: ConfigAppMod
         logger.error("Prompt blocked by OpenAI moderation", extra={"step": "generation_blocked"}, exc_info=True)
 
         raise HTTPException(  # noqa: B904
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Meme generation failed due to content restrictions."
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Meme generation failed due to content restrictions."
         )

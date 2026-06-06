@@ -1,8 +1,9 @@
 # Scheduled Test Pipeline
-# Runs pytest automatically about every 14 days at 9:00 AM UTC.
-# Purpose: catch silent breakages — if RAWG or OpenAI change their API responses,
-# or if a dependency update breaks something, this catches it
-# even when no code changes are being made.
+# Runs the (mocked) test suite automatically about every 14 days at 9:00 AM UTC.
+# Purpose: catch breakages that appear with no code change — e.g. a transitive
+# dependency update, or a runner/Python change that breaks our tests.
+# NOTE: these tests MOCK RAWG and OpenAI, so this does NOT detect real upstream
+# API changes.
 # Can also be triggered manually from the GitHub Actions UI via workflow_dispatch.
 
 name: Scheduled Tests
@@ -21,16 +22,16 @@ env:
 jobs:
   scheduled-tests:
     runs-on: ubuntu-latest
+    env:
+      RAWG_API_KEY: "ci-fake-key"
+      OPEN_AI_API_KEY: "ci-fake-key"
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
+        run: pipx install poetry
 
       - name: Setup Python
         uses: actions/setup-python@v5
