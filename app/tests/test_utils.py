@@ -111,7 +111,7 @@ class TestGenerateMemeWithoutImages:
         result = generate_meme_without_images(rawg_api_fake_game_without_screenshots, "normal", mock_client)
         assert result == expected
 
-    def test_generate_meme_wihtou_images_failure(self, rawg_api_fake_game_without_screenshots):
+    def test_generate_meme_wihtout_images_failure(self, rawg_api_fake_game_without_screenshots):
         mock_client = Mock()
 
         mock_client.images.generate.side_effect = BadRequestError(
