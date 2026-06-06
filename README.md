@@ -261,6 +261,7 @@ Then edit `.env` with:
   ```
   Use the **same value** in your Streamlit frontend config — backend and frontend share this secret.
 - **`LOGFIRE_TOKEN`** — write token from the [Logfire dashboard](https://logfire.pydantic.dev)
+- **`DB_DIR`** *(optional)* — override the storage path for the SQLite DB + memes. Defaults to `app/db` if unset. Only needed when running against a persistent volume (e.g. Fly.io, Docker bind mount). On Fly.io this is already set via `fly.toml`, so you don't touch it for normal deploys.
 
 ---
 

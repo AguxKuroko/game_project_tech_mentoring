@@ -1,7 +1,7 @@
 [project]
 name = "game-project-tech-mentoring"
 version = "0.1.0"
-description = "will see what this will be lol"
+description = "Pick a year, receive a cursed AI meme about the worst-rated game of that year. RAWG API + OpenAI image generation."
 authors = [
     { name = "Agnieszka", email = "145929660+AguxKuroko@users.noreply.github.com" }
 ]
