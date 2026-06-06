@@ -11,7 +11,7 @@ from app.app_config import ConfigAppMode, ConfigResponseFormat, app_paths
 from app.auth import verify_backend_api_key
 from app.db.db_models import Meme, MemeStats, MemeTopResponse
 from app.db.db_utils import get_time
-from app.db.engine import engine
+from app.db.engine import get_engine
 from app.logging_config import setup_logging
 from app.meme_generator import generate_game_meme
 from app.models import MemeGeneratorJsonData, RawgApiData
@@ -73,7 +73,7 @@ def worst_game_per_year(
         image_bytes: bytes = generate_game_meme(worst_game, mode, save=False)
         return Response(content=image_bytes, media_type="image/png")
 
-    with Session(engine) as session:
+    with Session(get_engine()) as session:
         try:
             logger.info(f"Checking cache | year={year}", extra={"year": year, "step": "cache_check"})
             db_meme: Meme | None = session.exec(select(Meme).where(Meme.file_path == str(filepath))).one_or_none()
@@ -128,7 +128,7 @@ def worst_game_per_year(
     dependencies=[Depends(verify_backend_api_key)],
 )
 def hall_of_shame_stats(request: Request) -> list[MemeTopResponse]:
-    with Session(engine) as session:
+    with Session(get_engine()) as session:
         logger.info("Request received | hall_of_shame", extra={"endpoint": "hall_of_shame"})
         max_count = session.exec(select(MemeStats.access_count).order_by(MemeStats.access_count.desc())).first()
 

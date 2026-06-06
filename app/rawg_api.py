@@ -3,7 +3,7 @@ import logging
 import requests
 from fastapi import HTTPException, status
 
-from app.api_keys_config import api_game_key
+from app.api_keys_config import get_api_keys
 from app.models import RawgApiData
 from app.utils import extract_genres, extract_release_year
 
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def rawg_api_call(year: int) -> RawgApiData | None:
     params = {
-        "key": api_game_key.RAWG_API_KEY,
+        "key": get_api_keys().RAWG_API_KEY,
         "dates": f"{year}-01-01,{year}-12-31",
         "ordering": "metacritic",
         "page_size": 1,
