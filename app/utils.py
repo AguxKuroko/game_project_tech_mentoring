@@ -1,4 +1,5 @@
 import logging
+import random
 import re
 from contextlib import asynccontextmanager
 from io import BytesIO
@@ -15,6 +16,20 @@ from app.db.engine import get_engine
 from app.models import RawgApiData
 
 logger = logging.getLogger(__name__)
+
+CAPTION_STYLES = [
+    "ROAST: brutal one-liner insulting the game's quality directly, like a comedy roast set",
+    "ANCESTRAL SHAME: claim the game is a generational disgrace — ancestors, bloodline, family curse",
+    "CRIME SCENE: frame playing this game as a criminal act or war crime — lawyers, witnesses, evidence",
+    "RELATIONSHIP RUIN: this game ended a marriage, friendship, or family — be specific about the damage",
+    "OVER-THE-TOP COMPARISON: compare playing this to something WORSE than a real disaster — "
+    "the comparison must be COHERENT and tied to suffering or bad experiences, NOT random nonsense words",
+    "REGRET SPIRAL: list specific awful life consequences this game caused — be petty and detailed",
+    "MEDICAL DIAGNOSIS: treat the game as a diagnosable illness, curse, or psychological condition",
+    "FAKE 1-STAR REVIEW: bitter user review distilled into a meme caption — like Yelp meets a breakup text",
+    "REVERSE FLEX: pretend to brag about something that's actually devastating about playing the game",
+    "DARK CONFESSION: someone confessing the game ruined a very specific part of their life",
+]
 
 
 def extract_release_year(release_year_from_api: dict) -> str:
@@ -73,79 +88,122 @@ def build_prompt(game_data: RawgApiData, mode: str) -> str:
     This data is injected into the prompt, so each prompt is built dynamically
     (e.g., game name, genre, release year, etc.).
     """
-    base_prompt = f"""
-Create a funny and visually engaging internet meme with a stylized,
-cartoon-like video game aesthetic.
+    caption_style = random.choice(CAPTION_STYLES)
 
-Context:
-You are given images from a video game. Use them only as visual inspiration (colors, characters,
-environment), but transform them into a new, original and exaggerated scene.
+    base_prompt = f"""
+Create a 1024x1024 internet meme image — cartoon video game aesthetic, with text.
+
+ABSOLUTE PRIORITY: ALL TEXT MUST BE CLEARLY VISIBLE AND READABLE. Nothing cut off, nothing faded, nothing blurry.
 
 Game data:
 - Title: "{game_data.game_name}"
 - Genre: {", ".join(game_data.game_genre)}
-- Release year: {game_data.game_release_year}
-- Review score: {game_data.game_meta_score}
-- Number of players who stopped playing: {game_data.game_dropped_count}
+- Metascore: {game_data.game_meta_score} (out of 100 — lower is worse)
+- Players who quit: {game_data.game_dropped_count}
 
-Visual style:
-- Use vibrant but slightly distorted or “buggy” colors, like a poorly designed or broken game
-- Add noticeable gaming effects such as glitch artifacts, pixelation, scanlines, UI overlays,
-or fake HUD elements (health bars, menus, warning text)
-- Slightly exaggerate proportions or expressions to enhance humor
-- Make the image visually striking and dynamic, but not cluttered
-- Strongly reflect the game genre in the entire scene:
-- Sports → stadium, players, scoreboard, dynamic action
-- Fantasy → magic, dark atmosphere, mythical elements
-- Shooter → weapons, chaos, explosions, tactical UI
-- RPG → characters, dialogue UI, quest-like elements
+IMAGE vs TEXT BALANCE: the cartoon ARTWORK fills 65-70% of the image. Text is small support — never dominating.
 
-Text (VERY IMPORTANT):
-- All text must be fully visible, centered, and NEVER cut off
-- Keep large safe margins from all edges (at least 15–20%)
-- Prefer placing text in the upper and middle areas (avoid bottom edge)
-- Use short text (max 6–10 words per line)
-- Break text into multiple lines if needed
-- Use bold, large, high-contrast meme-style font
-- Add strong outline or shadow for readability
+LAYOUT — three strict non-overlapping zones:
+1. TOP STRIP (top ~15% of image only): GAME TITLE "{game_data.game_name}" — bold, centered, ONE line, MEDIUM size (not giant)
+2. MIDDLE: ARTWORK takes the whole middle. Caption sits over the artwork around 55-65% height — small-to-medium bold text, 4-7 words, ONE line
+3. BOTTOM-RIGHT CORNER ONLY: METASCORE badge "METASCORE: {game_data.game_meta_score}" — small red/dark red sticker with paint-drip effect, max 15% of image width
 
-Text content:
-- Clearly highlight the game title "{game_data.game_name}" (larger font, strong emphasis)
-- Include the release year "{game_data.game_release_year}" in a clean, readable way
-- Add a short, punchy meme caption (simple setup → punchline)
-- Keep the caption simple, bold, and instantly understandable in under 2 seconds
+TEXT SIZING (very important — keep text PROPORTIONATE):
+- Title height: about 10-12% of image height (medium, not huge)
+- Caption height: about 7-9% of image height (smaller than title)
+- Badge text: small, fits inside the badge
+- The image / artwork is the star; the text is a label, not the subject
+- Bold meme font with thick black outline + drop shadow for readability
+- If words don't fit, SHORTEN the caption — do not enlarge the text
 
-Metascore display (VERY IMPORTANT):
-- Display the metascore clearly as text: "METASCORE: {game_data.game_meta_score}"
-- Place it inside a bold, visible frame or badge
-- The badge should be red or dark red
-- Add a dripping or melting effect (like paint dripping) for dramatic and humorous effect
-- Make this element stand out visually, like a warning or failure indicator in a game UI
+CAPTION — this is the joke. Style for this meme: {caption_style}
 
-Humor logic:
-- Convert the data into a relatable or absurd gaming situation
-- Focus on player experience, expectations vs reality, or surprising outcomes
-- Use exaggeration and irony
+The caption must be a BRUTAL ROAST. Mean, petty, specific, cringe-funny.
+Stand-up comedy insult energy. Make fun of the game directly.
 
-How to use the data:
-- Use the metascore to imply player experience (confusion, struggle, chaos)
-- Use the dropped player count to suggest behavior (leaving early, unexpected reactions)
-- Use genre and visuals to shape the joke
-- Use release year to create contrast (modern vs outdated feeling)
+WHAT MAKES A CAPTION ACTUALLY FUNNY (read carefully):
+- Be SPECIFIC and SURPRISING — lean into THIS game's genre, characters, setting, or context for the joke
+- Lazy "worse than [thing]" comparisons are the WEAKEST kind of roast — AVOID them
+  * "Worse than eating glass" / "worse than X" patterns are banned unless the X is unexpected, specific, and game-relevant
+- A weird, petty, surprising angle beats a safe one every time
+- Land the joke with setup + punchline rhythm — even in a short line
+- Length: 4-9 words, ONE line (a few extra words are fine if they make the joke land harder)
 
-Important rules:
-- Do NOT clutter the image with too much text
-- Do NOT place text near edges where it could be cut off
-- Do NOT distort or obscure readability
-- Do NOT simply repeat raw data as the joke
-- If text does not fit clearly, reduce text instead of shrinking it
+JOKE MECHANISMS (use AT LEAST ONE — flat factual statements are NOT jokes):
+- PERSONIFICATION: treat game elements as if they're human ("Even the NPCs logged off", "The dragon filed a complaint")
+- ABSURD EXAGGERATION: take suffering to a ridiculous extreme ("Made my therapist need a therapist")
+- SUBVERTED EXPECTATION: setup makes reader expect X, punchline delivers Y
+- SPECIFIC DETAIL: the more concrete, the funnier ("11 minutes in" beats "minutes in")
+- IRONY: the result is the opposite of what should happen ("Speedrunning the uninstall button")
 
-Tone:
-- Ironic, playful, chaotic, slightly cursed
-- Feels like a parody of a strange or broken video game
+DO NOT just describe what happens in the game — that's a fact, not a joke.
+BAD (flat fact): "Six player characters quit" — true, but no joke mechanism
+GOOD (same idea, with mechanism): "Even the NPCs took a personal day" (personification + irony)
 
-Goal:
-Create ONE cohesive meme image that is visually strong, readable, and instantly understandable.
+FLAT vs FUNNY transformations (study these patterns):
+- FLAT: "The graphics are bad"
+  FUNNY: "My retinas filed a workplace injury claim" (exaggeration + personification)
+- FLAT: "Players hated it"
+  FUNNY: "Players speedrunning the uninstall button" (specific + ironic)
+- FLAT: "This game has bugs"
+  FUNNY: "Bugs filed bugs about the bugs" (recursion + personification)
+- FLAT: "Six player characters quit"
+  FUNNY: "Even the NPCs called in sick" (personification + workplace humor)
+
+COMPREHENSIBILITY RULE (CRITICAL — do not skip):
+- The caption MUST be a joke that ANY reader immediately understands
+- "Surprising" means unexpected angle, NOT random words
+- BAD: "Installed quaker oats on a zeppelin" — random nonsense, no joke
+- GOOD: "Mothership demanded a refund" — unexpected but you get it
+- Test: would a stranger glancing at this caption think "lol, fair" or "huh, what?"
+- If "huh, what?" → start over. Random absurdity is NOT funny.
+
+GAME-CONTEXT MATCH (CRITICAL — the joke must fit THIS specific game):
+- The caption MUST land in the context of this game's genre, characters, setting, or vibe
+- The chosen caption style above is a STARTING HINT — adapt it (or pivot to a different angle) if it doesn't naturally fit this game
+- Self-check: if you swapped this game with a completely different one, would the joke still land?
+  * If YES → the caption is too generic. Redo with a game-aware angle.
+- Examples of GOOD context-fit:
+  * Fantasy/dragon game → "Even the dragon filed for early retirement"
+  * Racing game → "Cars filed a class action"
+  * Shooter → "Enemies started ghosting me"
+  * Sports → "Refs requested a transfer"
+  * Alien game → "Mothership demanded a refund"
+  * City builder → "Made urban planners cry actual tears"
+- Examples of BAD context-fit (would FAIL this rule):
+  * "Six witnesses called my attorney" on a dragon fantasy game (zero connection)
+  * Any caption that could apply to literally any bad game
+
+BANNED words: discover, experience, moments, vibes, journey, romance, adventure, explore, feel, magical, epic.
+BANNED phrases: "this game though", "what an experience", "is this even", "moments like these", "worse than eating glass", lazy "worse than X" generic comparisons.
+
+GOOD caption energy (inspiration only — generate ORIGINAL, do NOT copy):
+- "Made my ancestors quit gaming"
+- "Played once, called my lawyer"
+- "If pain had a save file"
+- "10 minutes in, divorce filed"
+- "Diagnosed me with regret"
+- "Even the aliens filed restraining orders" (alien game = specific)
+- "Wikipedia refused to write an article"
+- "Made urban planners cry actual tears" (city game = specific)
+- "My ancestors saw better graphics"
+- "Speedrun world record: closing the game"
+
+ARTWORK STYLE (this is the main visual — expressive, original, with a light retro vibe):
+- Create a NEW original cartoon illustration — do NOT use the input screenshots as the image itself
+- Take only colors, characters, and themes from the screenshots; redraw them in a stylized cartoon comic style
+- Light retro video-game atmosphere (subtle, not overwhelming):
+  * Faint CRT scanline texture in the background
+  * Slightly distorted "buggy" colors, hint of chromatic aberration on edges
+  * Vibrant but slightly off color palette — like a TV with the colors a bit wrong
+- Optional atmospheric details (use sparingly — ONE or TWO, not plastered everywhere): a single "WARNING" sign, a small HUD element, a faint health bar in a corner
+- DO NOT cover the image with "ERROR" / "GAME OVER" / random text overlays — keep retro effects atmospheric, not literal
+- Stylized cartoon characters with exaggerated proportions, dramatic facial expressions, dynamic poses
+- The scene should feel like a cursed broken video game — atmospheric retro vibe, joke first
+- The scene should be funny ON ITS OWN, before you even read the caption
+- Dynamic and detailed but NOT cluttered — leave room for the text zones to sit cleanly
+
+GOAL: a meme that's a real cartoon illustration with small text labels. Caption nasty, art does most of the work.
 """
 
     if mode == "dog":

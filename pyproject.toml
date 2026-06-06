@@ -24,7 +24,7 @@ dependencies = [
 packages = [{include = "app"}]
 
 [tool.ruff]
-line-length = 160
+line-length = 180
 
 [tool.ruff.lint]
 select = ["E", "F", "B", "N", "UP", "I"]

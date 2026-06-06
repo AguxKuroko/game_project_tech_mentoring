@@ -61,31 +61,40 @@ def render_sidebar():
         st.image(frontend_paths.welcome_image, width=200)
 
 
-def handle_generate(year: int | None):
+def handle_generate(year: int | None) -> None:
     if year is None:
         st.warning("Pick a year first.")
+        return
+
+    fast_api_url = f"{BACKEND_URL}/worst_game/{year}?format=image"
+
+    with st.spinner(random.choice(WAITING_MESSAGES)):
+        try:
+            response = requests.get(
+                fast_api_url,
+                headers={"X-BACKEND-KEY": BACKEND_API_KEY},
+                timeout=180,
+            )
+        except requests.RequestException as e:
+            st.error(f"Could not reach the meme backend: {e}")
+            return
+
+    if response.status_code == 200:
+        st.image(response.content)
+        return
+
+    show_error_for_status(response, year)
+
+
+def show_error_for_status(response: requests.Response, year: int) -> None:
+    if response.status_code == 404:
+        st.error(f"No meme to show... {year} has no game with a valid metascore.")
+    elif response.status_code == 400:
+        st.error(f"{year} is in the future. No bad games have been made yet... or have they?")
+    elif response.status_code == 422:
+        st.warning(
+            f"{year}'s worst game is so cursed even the AI refused to make a meme about it. "
+            f"The cosmic safety system blocked our spell. Try a different year — the meme gods may be kinder."
+        )
     else:
-        fast_api_url = f"{BACKEND_URL}/worst_game/{year}?format=image"
-
-        with st.spinner(random.choice(WAITING_MESSAGES)):
-            try:
-                response = requests.get(
-                    fast_api_url,
-                    headers={"X-BACKEND-KEY": BACKEND_API_KEY},
-                    timeout=180,
-                )
-            except requests.RequestException as e:
-                st.error(f"Could not reach the meme backend: {e}")
-                return
-
-        if response.status_code == 200:
-            st.image(response.content)
-
-        elif response.status_code == 404:
-            st.error(f"No meme to show... {year} has no game with a valid metascore.")
-
-        elif response.status_code == 400:
-            st.error(f"{year} is in the future. No bad games have been made yet... or have they?")
-
-        else:
-            st.error(f"Something went horribly wrong... error {response.status_code}")
+        st.error(f"Something went horribly wrong... error {response.status_code}")
