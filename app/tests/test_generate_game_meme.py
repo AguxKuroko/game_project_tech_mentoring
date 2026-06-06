@@ -8,9 +8,7 @@ class TestGenerateGameMeme:
     @patch("app.meme_generator.get_api_keys")
     @patch("pathlib.Path.write_bytes")
     @patch("app.meme_generator.OpenAI")
-    def test_generate_game_meme_without_screenshots_not_saving(
-        self, mock_openai, mock_write_bytes, mock_keys, get_fake_api_keys, rawg_api_fake_game_without_screenshots
-    ):
+    def test_generate_game_meme_without_screenshots_not_saving(self, mock_openai, mock_write_bytes, mock_keys, get_fake_api_keys, rawg_api_fake_game_without_screenshots):
         mock_keys.return_value = get_fake_api_keys
         fake_result = Mock()  # result
         fake_result.data = [Mock()]
@@ -30,9 +28,7 @@ class TestGenerateGameMeme:
     @patch("pathlib.Path.write_bytes")
     @patch("app.meme_generator.prepare_images_for_openai")
     @patch("app.meme_generator.OpenAI")
-    def test_generate_game_meme_with_screenshots(
-        self, mock_openai, mock_prepare, mock_write_bytes, mock_keys, get_fake_api_keys, rawg_api_fake_game_with_screenshots
-    ):
+    def test_generate_game_meme_with_screenshots(self, mock_openai, mock_prepare, mock_write_bytes, mock_keys, get_fake_api_keys, rawg_api_fake_game_with_screenshots):
         mock_keys.return_value = get_fake_api_keys
 
         mock_prepare.return_value = ["img1", "img2", "img3"]
