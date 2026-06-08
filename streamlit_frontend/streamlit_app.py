@@ -1,6 +1,5 @@
 import streamlit as st
-
-from streamlit_frontend.st_utilis import handle_generate, render_how_it_works, render_sidebar, render_year_input, set_config_page
+from st_utilis import handle_generate, render_how_it_works, render_sidebar, render_year_input, set_config_page
 
 set_config_page()
 
