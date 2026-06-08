@@ -147,6 +147,29 @@ flowchart LR
 | `GET` | `/worst_game/{year}` | Get the worst game of a year — as JSON or a generated meme image |
 | `GET` | `/hall_of_shame` | Leaderboard of the most-accessed memes |
 
+### 🔐 Authentication
+
+Both `/worst_game/{year}` and `/hall_of_shame` require an API key sent as a request header:
+
+| Header | Value |
+|--------|-------|
+| `X-BACKEND-KEY` | Your backend API key (set as `BACKEND_API_KEY` in `.env` locally, or in Fly secrets in production) |
+
+#### How to send it
+
+- **Swagger UI (`/docs`)** → click **Authorize 🔓** at the top → paste the key → call any endpoint
+- **curl / PowerShell**:
+  ```bash
+  curl -H "X-BACKEND-KEY: your-key" "http://localhost:8000/worst_game/2015?format=image" -o meme.png
+  ```
+- **Streamlit frontend** → handled automatically; the key lives in Streamlit Cloud's secrets dashboard
+
+#### Why pasting a URL into a browser returns `401 Unauthorized`
+
+Browsers cannot attach custom headers (like `X-BACKEND-KEY`) to URL-bar navigation — they only send standard headers like `Cookie` and `User-Agent`. So a direct visit to `http://.../worst_game/2015?format=image` will always 401. This is **intentional**: it protects the OpenAI budget from anyone who discovers the public Fly URL.
+
+The `game_meme` URL inside the JSON response is a **programmatic pointer**, not a directly-clickable link — clients (Streamlit, curl, scripts) call it with the auth header attached. Browsers cannot. That's the security model working as designed.
+
 ### `/worst_game/{year}`
 
 | Parameter | Type | Description |
@@ -216,10 +239,12 @@ Returns the most-viewed meme(s) — the games that were memed so hard they achie
 
 | What | Where |
 |------|-------|
-| Frontend (Streamlit UI) | `https://<your-subdomain>.streamlit.app` *(deployed to Streamlit Community Cloud)* |
+| Frontend (Streamlit UI) | `https://worst-games-memed.streamlit.app/` *(deployed to Streamlit Community Cloud)* |
 | Backend Swagger docs | https://worst-game-meme.fly.dev/docs |
 
 > The Fly.io backend sleeps when idle to save cost. First request after a while takes ~3-5s while the machine wakes up.
+
+> The Streamlit frontend is the easiest way to try the app — no setup needed. The Swagger UI works too, but requires an API key (see [Authentication](#-authentication) below).
 
 ---
 
