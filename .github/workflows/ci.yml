@@ -1,10 +1,13 @@
-# CI Pipeline: Detect changes -> Lint -> Test -> CI_status
+# CI Pipeline: Detect changes -> Lint -> Test -> Deploy backend -> CI_status
 #
 # Jobs (run in this order):
-#   changes       - detects whether any non-docs file changed; lets lint/test skip on docs-only edits
-#   quality-check - Ruff lint + format check; runs only when code changed (or when chosen on a manual run)
-#   tests         - pytest; runs after quality-check. Fail-fast: skipped if lint failed
-#   ci-status     - always runs and reports a single pass/fail.
+#   changes        - detects what kind of files changed; emits two flags:
+#                       code    = anything non-docs (gates lint/tests)
+#                       backend = files the Fly container cares about (gates deploy)
+#   quality-check  - Ruff lint + format check; runs when code changed (or chosen on manual run)
+#   tests          - pytest; runs after quality-check. Fail-fast: skipped if lint failed
+#   deploy-backend - flyctl deploy; ONLY on push to main, ONLY if backend changed, ONLY if CI passed
+#   ci-status      - always runs and reports a single pass/fail.
 #
 # Triggers:
 #   - push to main
@@ -12,8 +15,9 @@
 #   - manual run via the GitHub Actions UI, with a dropdown to choose which jobs run (all / lint / tests)
 #
 # Concurrency: if a new run starts for the same branch, the previous one is cancelled automatically.
+# Deploy has its own concurrency group with cancel-in-progress: false (never cancel a mid-flight deploy).
 
-name: CI - Detect changes -> Lint -> Test -> CI_status
+name: CI - Detect changes -> Lint -> Test -> Deploy -> CI_status
 
 on:
   push:
@@ -43,6 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       code: ${{ steps.filter.outputs.code }}
+      backend: ${{ steps.filter.outputs.backend }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -52,6 +57,13 @@ jobs:
             code:
               - '**'
               - '!**/*.md'
+            backend:
+              - 'app/**'
+              - 'Dockerfile'
+              - 'fly.toml'
+              - 'pyproject.toml'
+              - 'poetry.lock'
+              - '.github/workflows/ci.yml'
 
   quality-check:
     needs: changes
@@ -116,14 +128,35 @@ jobs:
           fi
           exit $EXIT
 
+  deploy-backend:
+    needs: [changes, quality-check, tests]
+    if: >-
+      ${{ github.event_name == 'push'
+          && github.ref == 'refs/heads/main'
+          && needs.changes.outputs.backend == 'true'
+          && needs.quality-check.result == 'success'
+          && needs.tests.result == 'success' }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-backend
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
   ci-status:
     if: always()
-    needs: [quality-check, tests]
+    needs: [quality-check, tests, deploy-backend]
     runs-on: ubuntu-latest
     steps:
       - name: Check results
         run: |
-          if [ "${{ needs.quality-check.result }}" = "failure" ] || [ "${{ needs.tests.result }}" = "failure" ]; then
+          if [ "${{ needs.quality-check.result }}" = "failure" ] \
+            || [ "${{ needs.tests.result }}" = "failure" ] \
+            || [ "${{ needs.deploy-backend.result }}" = "failure" ]; then
             echo "A required job failed."
             exit 1
           fi

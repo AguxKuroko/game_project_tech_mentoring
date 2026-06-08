@@ -3,6 +3,7 @@ from logging.handlers import RotatingFileHandler
 
 import logfire
 
+from app.api_keys_config import get_api_keys
 from app.app_config import app_paths
 
 
@@ -30,4 +31,7 @@ def setup_logging():
 
         logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
 
-    logfire.configure(service_name="worst-game-meme-app")
+    logfire.configure(
+        service_name="worst-game-meme-app",
+        token=get_api_keys().LOGFIRE_TOKEN,
+    )

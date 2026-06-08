@@ -1,0 +1,19 @@
+[[theme.fontFaces]]
+family = "Press Start 2P"
+url = "https://fonts.gstatic.com/s/pressstart2p/v15/e3t4euO8T-267oIAQAu6jDQyK3nVivM.woff2"
+style = "normal"
+weight = 400
+
+[[theme.fontFaces]]
+family = "VT323"
+url = "https://fonts.gstatic.com/s/vt323/v17/pxiKyp0ihIEF2isfFJXUdVNF.woff2"
+style = "normal"
+weight = 400
+
+[theme]
+primaryColor = "#FF0080"
+backgroundColor = "#1A0F1F"
+secondaryBackgroundColor = "#2D1B4E"
+textColor = "#00FFCC"
+font = "VT323"
+headingFont = "Press Start 2P"

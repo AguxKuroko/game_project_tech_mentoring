@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def generate_game_meme(game_data: RawgApiData, meme_mode: ConfigAppMode, save: bool = True) -> Path | bytes:
     logger.info("Initializing OpenAI client", extra={"step": "init_openai"})
-    client = OpenAI(api_key=get_api_keys().OPEN_AI_API_KEY)
+    client = OpenAI(api_key=get_api_keys().OPEN_AI_API_KEY, timeout=120)
 
     images = prepare_images_for_openai(extract_screenshots(game_data.game_screenhosts))
 

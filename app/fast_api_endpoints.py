@@ -2,12 +2,13 @@ import logging
 from datetime import datetime
 
 import logfire
-from fastapi import FastAPI, HTTPException, Path, Query, Request, Response, status
+from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request, Response, status
 from fastapi.responses import FileResponse
 from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import Session, select
 
 from app.app_config import ConfigAppMode, ConfigResponseFormat, app_paths
+from app.auth import verify_backend_api_key
 from app.db.db_models import Meme, MemeStats, MemeTopResponse
 from app.db.db_utils import get_time
 from app.db.engine import get_engine
@@ -38,6 +39,7 @@ def home():
 @app.get(
     "/worst_game/{year}",
     description="Get a chaotic meme or JSON about the most questionable game of the given year.",
+    dependencies=[Depends(verify_backend_api_key)],
 )
 def worst_game_per_year(
     request: Request,
@@ -120,7 +122,11 @@ def worst_game_per_year(
         return MemeGeneratorJsonData(game_name=worst_game.game_name, game_meme=f"{request.base_url}worst_game/{year}?format=image")
 
 
-@app.get("/hall_of_shame", description="Welcome to the hall of shame. These games were memed so hard, they achieved immortality.")
+@app.get(
+    "/hall_of_shame",
+    description="Welcome to the hall of shame. These games were memed so hard, they achieved immortality.",
+    dependencies=[Depends(verify_backend_api_key)],
+)
 def hall_of_shame_stats(request: Request) -> list[MemeTopResponse]:
     with Session(get_engine()) as session:
         logger.info("Request received | hall_of_shame", extra={"endpoint": "hall_of_shame"})

@@ -1,0 +1,28 @@
+# fly.toml app configuration file generated for worst-game-meme on 2026-05-31T19:46:55+02:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'worst-game-meme'
+primary_region = 'ams'
+
+[build]
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  cpus = 1
+  memory_mb = 512
+
+[env]
+  DB_DIR = "/data"
+
+[[mounts]]
+  source = "memedata"
+  destination = "/data"

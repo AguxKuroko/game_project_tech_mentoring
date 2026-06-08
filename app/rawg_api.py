@@ -22,7 +22,7 @@ def rawg_api_call(year: int) -> RawgApiData | None:
     }
     logger.info(f"Fetching RAWG API data | year={year}", extra={"year": year, "step": "rawg_request"})
     try:
-        response = requests.get(GAME_API_URL, params=params, timeout=10)
+        response = requests.get(GAME_API_URL, params=params, timeout=15)
         response.raise_for_status()  # catch HTTP errors
     except requests.exceptions.RequestException:
         logger.error(f"RAWG API request failed | year={year}", extra={"year": year, "step": "rawg_error"}, exc_info=True)
