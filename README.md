@@ -41,6 +41,11 @@ All with ironic, slightly unhinged energy. 🔥
 
 ---
 ## 🚀 Demo
+
+Live Streamlit frontend — cursed-meme generation in action:
+
+<!-- PASTE STREAMLIT GIF URL HERE -->
+
 Example API usage via Swagger UI:
 
 https://github.com/user-attachments/assets/67ea92a1-87ff-42b4-8031-c60b0507d3a4
