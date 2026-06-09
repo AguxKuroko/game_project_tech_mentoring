@@ -44,11 +44,14 @@ All with ironic, slightly unhinged energy. 🔥
 
 Live Streamlit frontend — cursed-meme generation in action:
 
-<!-- PASTE STREAMLIT GIF URL HERE -->
+<img width="1918" height="1021" alt="streamlit_app" src="https://github.com/user-attachments/assets/50332c32-b93c-4705-8d7b-6c928d6ba1e0" />
+
 
 Example API usage via Swagger UI:
 
-https://github.com/user-attachments/assets/67ea92a1-87ff-42b4-8031-c60b0507d3a4
+
+<img width="1280" height="676" alt="swagger" src="https://github.com/user-attachments/assets/2d179657-0b84-4a00-b4d6-f02e39ac4021" />
+
 
 ---
 
