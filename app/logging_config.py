@@ -13,6 +13,8 @@ def setup_logging():
     if not logger.handlers:
         logger.setLevel(logging.INFO)
 
+        app_paths.logs_dir.mkdir(parents=True, exist_ok=True)
+
         formatter = logging.Formatter("%(asctime)s | %(name)s | %(levelname)s | %(message)s | %(filename)s:%(lineno)d (%(funcName)s)")
 
         file_handler = RotatingFileHandler(

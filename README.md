@@ -1,10 +1,10 @@
 # 🎮 Worst Game Meme Generator
 
 > *Enter a year. Receive a cursed meme about the game that made players question everything.*
----
+
 [![CI - Detect changes -> Lint -> Test -> CI_status](https://github.com/AguxKuroko/worst-games-memed/actions/workflows/ci.yml/badge.svg)](https://github.com/AguxKuroko/worst-games-memed/actions/workflows/ci.yml)
 [![Scheduled Tests](https://github.com/AguxKuroko/worst-games-memed/actions/workflows/scheduled_tests.yml/badge.svg)](https://github.com/AguxKuroko/worst-games-memed/actions/workflows/scheduled_tests.yml)
----
+
 ![Python](https://img.shields.io/badge/Python-3.14-FF6B6B?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.135-FF9F43?logo=fastapi&logoColor=white)
 ![Uvicorn](https://img.shields.io/badge/Uvicorn-ASGI-FFEAA7?logo=uvicorn&logoColor=black)
@@ -22,7 +22,9 @@
 ![Docker](https://img.shields.io/badge/Docker-Container-2496ED?logo=docker&logoColor=white)
 ![Fly.io](https://img.shields.io/badge/Fly.io-Backend%20Host-7B2CBF?logo=flydotio&logoColor=white)
 ![Streamlit Cloud](https://img.shields.io/badge/Streamlit%20Cloud-Frontend%20Host-FF4B4B?logo=streamlit&logoColor=white)
+
 ---
+
 ## 💡 What Is This?
 
 A **Python backend + data engineering** project disguised as a meme generator.
@@ -41,9 +43,17 @@ All with ironic, slightly unhinged energy. 🔥
 
 ---
 ## 🚀 Demo
+
+Live Streamlit frontend — cursed-meme generation in action:
+
+<img width="1918" height="1021" alt="streamlit_app" src="https://github.com/user-attachments/assets/50332c32-b93c-4705-8d7b-6c928d6ba1e0" />
+
+
 Example API usage via Swagger UI:
 
-https://github.com/user-attachments/assets/67ea92a1-87ff-42b4-8031-c60b0507d3a4
+
+<img width="1280" height="676" alt="swagger" src="https://github.com/user-attachments/assets/2d179657-0b84-4a00-b4d6-f02e39ac4021" />
+
 
 ---
 
@@ -139,7 +149,7 @@ flowchart LR
 
 ---
 
-## 🚀 Endpoints
+## 📡 Endpoints
 
 | Method | Route | Description |
 |--------|-------|-------------|
@@ -153,8 +163,6 @@ flowchart LR
 |-----------|------|-------------|
 | `year` *(path)* | `int` | The year to look up |
 | `format` *(query)* | `json` \| `image` | Response format (default: `json`) |
-
-
 
 <details>
 <summary>📦 Example JSON Response</summary>
@@ -170,6 +178,7 @@ flowchart LR
 ### `/hall_of_shame`
 
 Returns the most-viewed meme(s) — the games that were memed so hard they achieved immortality.
+
 <details>
 <summary>📦 Example JSON Response</summary>
 
@@ -185,6 +194,30 @@ Returns the most-viewed meme(s) — the games that were memed so hard they achie
 ]
 ```
 </details>
+
+### 🔐 Authentication
+
+Both `/worst_game/{year}` and `/hall_of_shame` require an API key sent as a request header:
+
+| Header | Value |
+|--------|-------|
+| `X-BACKEND-KEY` | Your backend API key (set as `BACKEND_API_KEY` in `.env` locally, or in Fly secrets in production) |
+
+#### How to send it
+
+- **Swagger UI (`/docs`)** → click **Authorize 🔓** at the top → paste the key → call any endpoint
+- **curl / PowerShell**:
+  ```bash
+  curl -H "X-BACKEND-KEY: your-key" "http://localhost:8000/worst_game/2015?format=image" -o meme.png
+  ```
+- **Streamlit frontend** → handled automatically; the key lives in Streamlit Cloud's secrets dashboard
+
+#### Why pasting a URL into a browser returns `401 Unauthorized`
+
+Browsers cannot attach custom headers (like `X-BACKEND-KEY`) to URL-bar navigation — they only send standard headers like `Cookie` and `User-Agent`. So a direct visit to `http://.../worst_game/2015?format=image` will always 401. This is **intentional**: it protects the OpenAI budget from anyone who discovers the public Fly URL.
+
+The `game_meme` URL inside the JSON response is a **programmatic pointer**, not a directly-clickable link — clients (Streamlit, curl, scripts) call it with the auth header attached. Browsers cannot. That's the security model working as designed.
+
 ---
 
 ## 🛠 Tech Stack
@@ -198,7 +231,7 @@ Returns the most-viewed meme(s) — the games that were memed so hard they achie
 | **Database** | SQLite via SQLModel |
 | **AI / Image Gen** | OpenAI API (`gpt-image-1`) |
 | **Game Data** | RAWG Video Games API |
-| **Observability** | Logfire (OpenTelemetry under the hood) |
+| **Observability** | Logfire |
 | **Package Manager** | Poetry |
 | **Container** | Docker |
 | **Backend hosting** | Fly.io (Amsterdam region, scale-to-zero) |
@@ -216,10 +249,12 @@ Returns the most-viewed meme(s) — the games that were memed so hard they achie
 
 | What | Where |
 |------|-------|
-| Frontend (Streamlit UI) | `https://<your-subdomain>.streamlit.app` *(deployed to Streamlit Community Cloud)* |
-| Backend Swagger docs | https://worst-game-meme.fly.dev/docs |
+| Frontend (Streamlit UI) | [worst-games-memed.streamlit.app](https://worst-games-memed.streamlit.app/) *(deployed to Streamlit Community Cloud)* |
+| Backend Swagger docs | [worst-game-meme.fly.dev/docs](https://worst-game-meme.fly.dev/docs) |
 
 > The Fly.io backend sleeps when idle to save cost. First request after a while takes ~3-5s while the machine wakes up.
+
+> The Streamlit frontend is the easiest way to try the app — no setup needed. The Swagger UI works too, but requires an API key (see [Authentication](#-authentication) above).
 
 ---
 
@@ -265,7 +300,7 @@ Then edit `.env` with:
 
 ---
 
-### Option 1 — Backend only (FastAPI + Swagger UI)
+#### Option 1 — Backend only (FastAPI + Swagger UI)
 
 If you just want to poke the API directly without the Streamlit frontend:
 
@@ -275,7 +310,7 @@ poetry run uvicorn app.fast_api_endpoints:app --reload
 
 Then open [http://localhost:8000/docs](http://localhost:8000/docs) for the interactive Swagger UI. Click **Authorize** at the top right and paste your `BACKEND_API_KEY` to call protected endpoints.
 
-### Option 2 — Backend + Streamlit frontend (full app)
+#### Option 2 — Backend + Streamlit frontend (full app)
 
 You'll need **two terminals**.
 
@@ -321,11 +356,12 @@ app/                              # FastAPI backend (deployed to Fly.io in Docke
 ├── utils.py                      # Helpers: prompts, filename cleanup, lifespan
 ├── home_endpoint_image/
 │   └── welcome.png               # Backend home screen image (served at GET /)
-└── db/
-    ├── db_config.py              # Database URL config
-    ├── db_models.py              # SQLModel tables (Meme, MemeStats)
-    ├── db_utils.py               # UTC timestamp helper
-    └── engine.py                 # SQLModel engine setup
+├── db/
+│   ├── db_config.py              # Database URL config
+│   ├── db_models.py              # SQLModel tables (Meme, MemeStats)
+│   ├── db_utils.py               # UTC timestamp helper
+│   └── engine.py                 # SQLModel engine setup
+└── tests/                        # pytest suite (external APIs mocked)
 
 streamlit_frontend/               # Streamlit frontend (deployed to Streamlit Community Cloud)
 ├── streamlit_app.py              # Main UI entry point
@@ -344,17 +380,12 @@ streamlit_frontend/               # Streamlit frontend (deployed to Streamlit Co
 ├── ci.yml                        # Detect changes → Lint → Test → Deploy backend → Status
 └── scheduled_tests.yml           # Monthly health-check test runs
 
+.env.example                      # Template for local .env — copy and fill in your keys
+.pre-commit-config.yaml           # Git hooks (lint/format before every commit)
 Dockerfile                        # Backend container build (Python 3.14-slim + Poetry)
 fly.toml                          # Fly.io app config (volume, region, auto-stop, scale)
 pyproject.toml                    # Backend deps + tooling config (Poetry)
 ```
-
----
-
-## 🥚 Easter Egg & 🐾 Kuroko
-
-Kuroko is my dog and the real co-creator of this project. She's currently kicking cancer's ass through chemotherapy — for the second time — like the absolute fighter she is. 🐾 She deserved to be immortalized somewhere, so she became the welcome screen, got turned into a cursed AI meme with hypnotic glowing eyes, and somewhere in this project there's a secret mode dedicated to her.
-If you're curious enough to find it, you'll know it when you see it. 🐾
 
 ---
 
@@ -413,6 +444,13 @@ Two filters → two different gates:
 | Secret | Where it lives | Used by |
 |--------|----------------|---------|
 | `FLY_API_TOKEN` | GitHub Actions repository secret | `deploy-backend` job — authenticates `flyctl deploy` |
+
+---
+
+## 🥚 Easter Egg & 🐾 Kuroko
+
+Kuroko is my dog and the real co-creator of this project. She's currently kicking cancer's ass through chemotherapy — for the second time — like the absolute fighter she is. 🐾 She deserved to be immortalized somewhere, so she became the welcome screen, got turned into a cursed AI meme with hypnotic glowing eyes, and somewhere in this project there's a secret mode dedicated to her.
+If you're curious enough to find it, you'll know it when you see it. 🐾
 
 ---
 

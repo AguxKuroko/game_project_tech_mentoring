@@ -3,9 +3,8 @@ from datetime import datetime
 
 import requests
 import streamlit as st
-
-from streamlit_frontend.content import WAITING_MESSAGES
-from streamlit_frontend.st_config import frontend_paths
+from content import WAITING_MESSAGES
+from st_config import frontend_paths
 
 BACKEND_API_KEY = st.secrets["BACKEND_API_KEY"]
 BACKEND_URL = st.secrets["BACKEND_URL"]
